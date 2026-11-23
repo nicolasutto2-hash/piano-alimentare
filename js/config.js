@@ -1,6 +1,10 @@
 // Configurazione pubblica (nessun segreto qui).
 // proxyUrl: indirizzo del servizio che parla con Claude per conto dell'app. Vuoto = assistente spento.
+// Se proxyUrl è vuoto, l'assistente usa la chiave personale salvata sul telefono (modalità "solo io").
+// I prezzi servono solo per la stima di spesa mostrata nell'app (dollari per milione di token).
 window.CONFIG = {
   proxyUrl: '',
-  model: 'claude-haiku-5-5'
+  model: 'claude-haiku-5-5',
+  priceIn: 0.10,
+  priceOut: 0.50
 };

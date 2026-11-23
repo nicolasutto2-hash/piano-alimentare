@@ -86,7 +86,8 @@ function chatTools(){
 async function loadWeek2(ws){ await Promise.all([...Array(7)].map((_,i)=>loadDay(shift(ws,i),true))); }
 let chatCtl = null;
 function chatErr(e){
-  if(e && e.code==='not_granted'){ S.settings.aiCode=''; saveSettings(); refreshAI(); S.aiMsg='Il codice amici non è valido: controllalo e riprova.'; return 'Il codice amici non è valido. Inseriscilo di nuovo.'; }
+  if(e && e.code==='not_granted'){ if(AI.mode()==='proxy'){ S.settings.aiCode=''; saveSettings(); refreshAI(); S.aiMsg='Il codice amici non è valido: controllalo e riprova.'; return 'Il codice amici non è valido. Inseriscilo di nuovo.'; } Secret.remove('apikey'); refreshAI(); S.aiMsg='La chiave non è valida o è stata revocata: creane una nuova nella console e incollala qui.'; return 'La chiave non funziona più. Inseriscila di nuovo.'; }
+  if(e && e.code==='no_credit') return 'Il credito Anthropic è finito. Aggiungine un po\' su console.anthropic.com e riprova.';
   if(e && e.code==='network') return 'Non riesco a collegarmi: controlla la connessione.';
   if(e && (e.code==='image_rejected' || e.code==='images_unavailable')) return 'Non riesco a usare questa foto. Prova con un\'altra, in formato JPEG o PNG.';
   if(e && e.code==='rate_limited') return 'Troppe richieste ravvicinate. Aspetta qualche secondo e riprova.';

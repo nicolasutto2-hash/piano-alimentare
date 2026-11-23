@@ -14,13 +14,13 @@ proprio profilo e ottiene calorie e porzioni su misura.
 ## Dati e privacy
 - I dati (diario, peso, esami, profilo) restano **solo sul telefono** di chi usa l'app. Non c'è nessun account e nessun database.
 - Se cancelli i dati del sito o cambi telefono si perdono: usa **Promemoria e dati → Salva una copia** e conserva il file.
-- L'assistente (facoltativo) invia al servizio solo i messaggi che scrivi e le foto che allegi.
+- L'assistente (facoltativo) usa **una chiave personale Anthropic** inserita nell'app: resta solo sul telefono, fuori dalle copie di sicurezza, e le richieste vanno direttamente a Claude (Haiku). Si paga a consumo, con credito prepagato. In alternativa, se `js/config.js` ha un `proxyUrl`, usa il servizio in `worker/` con un codice amici.
 
 ## Struttura
 - `index.html`, `css/`, `js/` — l'app (nessuna dipendenza, nessuna compilazione).
 - `manifest.webmanifest`, `sw.js`, `icons/` — installazione e uso senza internet.
-- `worker/` — il piccolo servizio dell'assistente (Cloudflare Worker). Vedi `worker/README.md`.
-- `js/config.js` — qui si scrive l'indirizzo del servizio (`proxyUrl`). Se è vuoto l'assistente è spento.
+- `worker/` — servizio facoltativo per condividere l'assistente con altre persone (Cloudflare Worker). Non serve per l'uso personale. Vedi `worker/README.md`.
+- `js/config.js` — modello e prezzi per la stima di spesa; `proxyUrl` vuoto = modalità con chiave personale.
 
 ## Pubblicazione
 GitHub Pages: *Settings → Pages → Deploy from a branch → `main` / root*. L'app si aggiorna da sola

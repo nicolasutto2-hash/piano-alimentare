@@ -25,6 +25,12 @@ const Store = {
   async set(k,v){ localStorage.setItem('piano:'+k, JSON.stringify(v)); },
   async remove(k){ try{ localStorage.removeItem('piano:'+k); }catch(e){} }
 };
+// Segreti (chiave API): fuori dai dati dell'app, quindi mai nei backup né nei report.
+const Secret = {
+  get(k){ try{ return localStorage.getItem('piano-secret:'+k) || ''; }catch(e){ return ''; } },
+  set(k,v){ try{ localStorage.setItem('piano-secret:'+k, v); }catch(e){} },
+  remove(k){ try{ localStorage.removeItem('piano-secret:'+k); }catch(e){} }
+};
 let chain = Promise.resolve();
 const enqueue = fn => { chain = chain.then(fn).catch(() => toast('Non sono riuscito a salvare. Riprova.')); return chain; };
 

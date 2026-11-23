@@ -280,6 +280,12 @@ document.addEventListener('click', ev => {
     const c = val('aicode').trim(); if(!c) return toast('Scrivi il codice amici.');
     S.settings.aiCode = c; S.aiMsg=''; saveSettings(); refreshAI(); render();
   }
+  else if(a==='aikeysave'){
+    const k = val('aikey').trim();
+    if(!/^sk-ant-/.test(k)) { S.aiMsg='La chiave deve iniziare con sk-ant-. Controlla di averla copiata tutta.'; return render(); }
+    Secret.set('apikey', k); S.aiMsg=''; refreshAI(); render(); toast('Assistente attivo');
+  }
+  else if(a==='aikeyreset'){ Secret.remove('apikey'); S.aiMsg=''; refreshAI(); render(); }
   else if(a==='aicodereset'){ S.settings.aiCode=''; S.aiMsg=''; saveSettings(); refreshAI(); render(); }
   else if(a==='resetchecks'){ const p=el.dataset.ws+':'; for(const k of Object.keys(S.settings.checked)) if(k.startsWith(p)) delete S.settings.checked[k]; saveSettings(); render(); }
   else if(a==='spesaweek'){ S.spesaWeek=+el.dataset.n; render(); }

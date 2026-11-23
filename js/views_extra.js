@@ -199,14 +199,20 @@ function chatHTML(){
   return h;
 }
 function viewAssist(){
-  if(!window.CONFIG || !CONFIG.proxyUrl) return `<div class="card"><h2>Assistente non ancora attivo</h2><p class="muted" style="margin:6px 0 0">Il servizio dell'assistente non è collegato a questa versione dell'app. Tutto il resto funziona normalmente.</p></div>`;
-  if(!S.sample) return `<div class="card"><h2>Assistente</h2><p class="muted" style="margin:6px 0 12px">Scrivi in modo naturale e l'assistente segna cosa mangi, cambia il menù e inserisce i tuoi dati. Per usarlo serve il <b>codice amici</b> che ti ha dato chi ti ha mandato l'app.</p>
-    <label for="aicode">Codice amici</label><input id="aicode" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Per esempio: pizza-2026">
-    <div style="margin-top:12px"><button class="btn pri" data-act="aicodesave">Attiva l'assistente</button></div>${S.aiMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.aiMsg)}</p>`:''}</div>`;
+  if(!S.sample){
+    if(AI.mode()==='proxy') return `<div class="card"><h2>Assistente</h2><p class="muted" style="margin:6px 0 12px">Per usarlo serve il <b>codice amici</b> che ti ha dato chi ti ha mandato l'app.</p>
+      <label for="aicode">Codice amici</label><input id="aicode" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div style="margin-top:12px"><button class="btn pri" data-act="aicodesave">Attiva l'assistente</button></div>${S.aiMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.aiMsg)}</p>`:''}</div>`;
+    return `<div class="card"><h2>Attiva l'assistente</h2><p class="muted" style="margin:6px 0 12px">Scrivi in modo naturale e l'assistente segna cosa mangi calcolando le calorie, cambia il menù, inserisce peso, misure, esami e la scheda, e legge le foto di piatti e schede. Usa Claude Haiku e si paga a consumo con una tua chiave: di solito centesimi al mese.</p>
+      <ol class="small" style="margin:0 0 12px;padding-left:20px;display:grid;gap:6px"><li>Vai su <b>console.anthropic.com</b>, crea un account e compra un piccolo credito.</li><li>Lascia spenta la ricarica automatica: il massimo che spendi è il credito caricato.</li><li>In <i>API keys</i> crea una chiave e incollala qui sotto.</li></ol>
+      <label for="aikey">Chiave API</label><input id="aikey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+      <p class="small muted" style="margin:8px 0 0">La chiave resta solo su questo telefono: non viene mai inclusa nelle copie di sicurezza né nei report.</p>
+      <div style="margin-top:12px"><button class="btn pri" data-act="aikeysave">Attiva l'assistente</button></div>${S.aiMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.aiMsg)}</p>`:''}</div>`;
+  }
   const imgOk = !!S.imgLimits, acc = imgOk ? S.imgLimits.mediaTypes.join(',') : '';
   return `<div id="chatlog">${chatHTML()}</div>
     ${S.chatImg?`<div class="row" style="margin-top:6px"><img src="${S.chatImg.url}" alt="Foto allegata" style="height:52px;width:52px;object-fit:cover;border-radius:12px"><span class="small grow">Foto allegata</span><button class="x" style="border:0;background:transparent;color:var(--muted)" data-act="chatimgdel">Togli</button></div>`:''}
     <form id="chatform" class="chatbar" autocomplete="off">${imgOk?`<button type="button" class="circ" style="width:46px;height:46px;background:var(--surface)" data-act="chatattach" aria-label="Allega una foto" ${S.chatBusy?'disabled':''}>${ICON.clip}</button><input id="chatfile" type="file" accept="${acc}" hidden>`:''}<input id="chatin" type="text" placeholder="${S.chatImg?'Aggiungi un commento (facoltativo)':'Scrivi qui…'}" aria-label="Messaggio per l'assistente" value="${esc(S.chatDraft)}" ${S.chatBusy?'disabled':''}>
     ${S.chatBusy?`<button type="button" class="btn" data-act="chatstop">Stop</button>`:`<button class="plus" style="width:46px;height:46px" aria-label="Invia">${ICON.send}</button>`}</form>
-    <p class="small muted" style="margin:8px 4px 0"><button class="x" style="border:0;background:transparent;color:var(--muted);padding:0;text-decoration:underline" data-act="aicodereset">Cambia codice</button><br>L'assistente stima le calorie: sono valori indicativi. Non sostituisce una visita da un professionista sanitario.</p>`;
+    <p class="small muted" style="margin:8px 4px 0"><button class="x" style="border:0;background:transparent;color:var(--muted);padding:0;text-decoration:underline" data-act="${AI.mode()==='proxy'?'aicodereset':'aikeyreset'}">${AI.mode()==='proxy'?'Cambia codice':'Rimuovi la chiave'}</button> · Spesa stimata questo mese: ${usageCost()<0.01?'meno di 1 centesimo':'circa $'+usageCost().toFixed(2).replace('.',',')}<br>L'assistente stima le calorie: sono valori indicativi. Non sostituisce una visita da un professionista sanitario.</p>`;
 }

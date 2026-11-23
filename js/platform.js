@@ -26,19 +26,41 @@ S.dl = {save:o => saveFile(o.filename, o.data)};
 
 // ---- assistente: parla con il servizio, che parla con Claude ----
 const AI = {
-  enabled(){ return !!(window.CONFIG && CONFIG.proxyUrl && S.settings.aiCode); },
+  mode(){ return (window.CONFIG && CONFIG.proxyUrl) ? 'proxy' : 'key'; },
+  enabled(){ return this.mode()==='proxy' ? !!S.settings.aiCode : !!Secret.get('apikey'); },
+  fail(status, j){
+    const msg = (j && j.error && (j.error.message || j.error)) || ('HTTP '+status);
+    const e = new Error(String(msg)); e.status = status;
+    if(status===401 || status===403) e.code = 'not_granted';
+    else if(status===429) e.code = 'rate_limited';
+    else if(/credit balance/i.test(String(msg))) e.code = 'no_credit';
+    else e.code = 'upstream';
+    return e;
+  },
+  countUsage(j){
+    try{
+      const u = j && j.usage; if(!u) return;
+      const m = todayStr().slice(0,7), cur = S.settings.usage && S.settings.usage.month===m ? S.settings.usage : {month:m, inTok:0, outTok:0, calls:0};
+      cur.inTok += (u.input_tokens||0) + (u.cache_creation_input_tokens||0) + (u.cache_read_input_tokens||0); cur.outTok += u.output_tokens||0; cur.calls += 1;
+      S.settings.usage = cur; saveSettings();
+    }catch(e){}
+  },
   async call(body, signal){
     let r;
-    try{ r = await fetch(CONFIG.proxyUrl, {method:'POST', headers:{'content-type':'application/json','x-access-code':S.settings.aiCode}, body:JSON.stringify(body), signal}); }
-    catch(e){ if(e && e.name==='AbortError'){ const x = new Error('cancelled'); x.code='cancelled'; throw x; } const x = new Error('rete'); x.code='network'; throw x; }
+    const direct = this.mode()==='key';
+    try{
+      if(direct) r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST', signal,
+        headers:{'content-type':'application/json','x-api-key':Secret.get('apikey'),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:CONFIG.model, max_tokens:2000, ...body})});
+      else r = await fetch(CONFIG.proxyUrl, {method:'POST', headers:{'content-type':'application/json','x-access-code':S.settings.aiCode}, body:JSON.stringify(body), signal});
+    }catch(e){ if(e && e.name==='AbortError'){ const x = new Error('cancelled'); x.code='cancelled'; throw x; } const x = new Error('rete'); x.code='network'; throw x; }
     const j = await r.json().catch(()=>null);
-    if(!r.ok){
-      const e = new Error((j && j.error && (j.error.message||j.error)) || ('HTTP '+r.status));
-      e.code = r.status===401 ? 'not_granted' : r.status===429 ? 'rate_limited' : 'upstream'; e.status = r.status; throw e;
-    }
+    if(!r.ok) throw this.fail(r.status, j);
+    this.countUsage(j);
     return j;
   }
 };
+const usageCost = () => { const u = S.settings.usage; return u && u.month===todayStr().slice(0,7) ? (u.inTok*CONFIG.priceIn + u.outTok*CONFIG.priceOut)/1e6 : 0; };
 function blobToImageBlock(blob){
   return new Promise((res,rej)=>{
     const fr = new FileReader();
