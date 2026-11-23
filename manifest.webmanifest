@@ -1,0 +1,17 @@
+{
+  "name": "Piano Alimentare",
+  "short_name": "Piano",
+  "description": "Menù settimanale, calorie, spesa, allenamento e progressi, personalizzati per te.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF0F1",
+  "theme_color": "#EEF0F1",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

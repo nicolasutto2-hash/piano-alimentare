@@ -1,0 +1,14 @@
+name = "piano-alimentare-assistente"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+MODEL = "claude-haiku-5-5"
+DAILY_LIMIT = "120"
+ALLOWED_ORIGIN = "https://nicolasutto2-hash.github.io"
+
+# Archivio dei contatori giornalieri: crealo con  npx wrangler kv namespace create LIMITS
+# e incolla qui l'id che ti restituisce.
+# [[kv_namespaces]]
+# binding = "LIMITS"
+# id = "INCOLLA_QUI_L_ID"
