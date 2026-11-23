@@ -430,7 +430,7 @@ async function loadAll(){
   if(w && w.ex) S.wlog = w;
   if(c && Array.isArray(c.msgs)) S.chat = c;
   if(S.settings.profile) applyCfg(S.settings.profile);
-  else if(S.legacy){ applyCfg({...newProfile(), powder:true, trainWhen:'mattina', trainTime:'09:00'}); if(!S.settings.startWeek) S.settings.startWeek = shift(todayStr(), -dayIdx(todayStr())); }
+  else if(S.legacy){ applyCfg({...newProfile(), powder:true, trainWhen:'mattina', trainTime:'09:00'}); if(!S.settings.startWeek) S.settings.startWeek = '2026-11-23'; }
   if(!S.settings.profile){ if(!S.ob) startOnboarding(false); } else if(S.ob && !S.ob.edit) S.ob = null;
 }
 

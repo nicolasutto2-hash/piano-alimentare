@@ -206,7 +206,7 @@ function finishProfile(){
   S.settings.pTarget = c.p; S.settings.fTarget = c.f;
   if(!legacy && planChanged) S.settings.plans = allPlans(allowedMap(p.excl), p.snacks!==false);
   if(!old){
-    S.settings.startWeek = shift(todayStr(), -dayIdx(todayStr()));
+    S.settings.startWeek = S.settings.startWeek || shift(todayStr(), -dayIdx(todayStr()));
     if(!legacy) S.body = {weights:[{d:todayStr(), kg:p.weight}], measures:[]};
   }
   S.legacy = false; S.ob = null;
