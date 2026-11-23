@@ -287,6 +287,8 @@ document.addEventListener('click', ev => {
   }
   else if(a==='aikeyreset'){ Secret.remove('apikey'); S.aiMsg=''; refreshAI(); render(); }
   else if(a==='aicodereset'){ S.settings.aiCode=''; S.aiMsg=''; saveSettings(); refreshAI(); render(); }
+  else if(a==='stepsshow'){ S.showSteps=true; render(); }
+  else if(a==='stepshide'){ S.showSteps=false; render(); }
   else if(a==='hlimport'){
     S.hlMsg=''; S.hlOk=false;
     const done = txt => importHealth(txt).then(h=>{ S.hlMsg='Importato: '+shortDate(h.d)+(h.steps!=null?', '+fmt(h.steps)+' passi':'')+(h.active!=null?', '+fmt(h.active)+' kcal attive':'')+(h.exMin!=null?', '+fmt(h.exMin)+' min di esercizio':'')+'.'; S.hlOk=true; render(); })
