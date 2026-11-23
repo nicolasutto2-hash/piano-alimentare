@@ -28,7 +28,7 @@ function weekSummary(ws){
     planned:days.reduce((a,x)=>a+x.planned,0), marked:days.reduce((a,x)=>a+x.marked,0),
     trainPlan:days.filter(x=>x.train).length, trained:days.filter(x=>x.trained).length, trainPast:days.filter(x=>x.train&&x.d<td).length,
     weight: cur ? cur.kg : null, weightPrev: prev ? prev.kg : null,
-    avgSteps: avgOf(days, x=>x.hl&&x.hl.steps), avgActive: avgOf(days, x=>x.hl&&x.hl.active), exTotal: days.reduce((a,x)=>a+((x.hl&&x.hl.exMin)||0),0), hlDays: days.filter(x=>x.hl).length,
+    stepsTotal: days.reduce((a,x)=>a+((x.hl&&x.hl.steps)||0),0), avgSteps: avgOf(days, x=>x.hl&&x.hl.steps), avgActive: avgOf(days, x=>x.hl&&x.hl.active), exTotal: days.reduce((a,x)=>a+((x.hl&&x.hl.exMin)||0),0), hlDays: days.filter(x=>x.hl).length,
     avgSleep: avgOf(days, x=>x.ci.sleep), avgEnergy: avgOf(days, x=>x.ci.energy), avgStress: avgOf(days, x=>x.ci.stress), insight: sleepInsight(days)};
 }
 function weekTips(s){
@@ -63,9 +63,15 @@ function viewSett(){
     ${stat('Allenamenti', s.trained+' / '+s.trainPlan, 'fatti su previsti')}
     ${stat('Giorni registrati', s.logged+' / 7', 'con almeno una voce')}
     ${stat('Sonno medio', s.avgSleep!=null?f1(s.avgSleep)+' ore':'–', s.avgEnergy!=null?'energia '+f1(s.avgEnergy)+' · stress '+f1(s.avgStress??0):'nessun check-in')}
-    ${stat('Peso medio', s.weight!=null?f1(s.weight)+' kg':'–', s.weight!=null&&s.weightPrev!=null?((s.weight-s.weightPrev<0?'−':'+')+f1(Math.abs(s.weight-s.weightPrev))+' kg dalla scorsa'):'nessuna pesata')}</div>`;
+    ${stat('Peso medio', s.weight!=null?f1(s.weight)+' kg':'–', s.weight!=null&&s.weightPrev!=null?((s.weight-s.weightPrev<0?'−':'+')+f1(Math.abs(s.weight-s.weightPrev))+' kg dalla scorsa'):'nessuna pesata')}
+    ${stat('Passi al giorno', s.avgSteps!=null?fmt(s.avgSteps):'–', s.avgSteps!=null?'totale '+fmt(s.stepsTotal)+' in '+s.hlDays+(s.hlDays===1?' giorno':' giorni'):'importa da Salute')}
+    ${stat('Energia attiva', s.avgActive!=null?fmt(s.avgActive)+' kcal':'–', s.avgActive!=null?'al giorno · '+fmt(s.exTotal)+' min di esercizio':'importa da Salute')}</div>`;
   h += `<section class="card"><div class="tag" style="margin-bottom:8px">Giorno per giorno</div>`+
     s.days.map((x,i)=>{ const pct = x.logged && x.tg>0 ? x.k/x.tg*100 : 0; return `<div class="row" style="padding:5px 0"><span class="small" style="width:34px">${DAYS[i]}</span><div class="bar grow" style="height:10px"><i style="width:${Math.min(100,pct)}%;background:${pct>110?'var(--warn)':'var(--lime-strong)'}"></i></div><span class="small num muted" style="width:92px;text-align:right">${x.logged?fmt(x.k)+' kcal':(x.past?'–':'')}</span>${x.train?`<span class="pill" title="Allenamento">${x.trained?'fatto':'palestra'}</span>`:'<span style="width:52px"></span>'}</div>`; }).join('')+`</section>`;
+  if(s.hlDays>0){
+    const mx = Math.max(10000, ...s.days.map(x=>(x.hl&&x.hl.steps)||0));
+    h += `<section class="card"><div class="tag" style="margin-bottom:8px">Passi per giorno</div>`+s.days.map((x,i)=>{ const v = x.hl && x.hl.steps; return `<div class="row" style="padding:5px 0"><span class="small" style="width:34px">${DAYS[i]}</span><div class="bar grow" style="height:10px"><i style="width:${v?Math.min(100,v/mx*100):0}%;background:var(--accent-ink)"></i></div><span class="small num muted" style="width:70px;text-align:right">${v==null?'–':fmt(v)}</span></div>`; }).join('')+`<div class="small muted" style="margin-top:6px">La scala arriva a ${fmt(mx)} passi.</div></section>`;
+  }
   h += `<section class="card"><h3>Cosa notare</h3><ul style="margin:8px 0 0;padding-left:18px;display:grid;gap:8px" class="small">${tips.map(t=>`<li>${esc(t)}</li>`).join('')||'<li class="muted">Nessun dato.</li>'}</ul>
     ${S.sample?`<div style="margin-top:12px"><button class="btn sm" data-act="weekai" data-ws="${ws}">Commenta la settimana con l'assistente</button></div>`:''}</section>
     <p class="small muted">Indicazioni generali, non sono una valutazione medica. Supporto organizzativo ed educativo.</p>`;
