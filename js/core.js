@@ -48,7 +48,7 @@ const S = {
   settings:{plans:allPlans(), cycle:4, target:TARGET_KCAL, checked:{}, train:[], workout:{}, preKcal:10, weighDay:0, profile:null, startWeek:null, trainBonus:150, pTarget:null, fTarget:null, goal:null, cal:{}, favs:[], adjAt:null},
   body:{weights:[], measures:[]}, ob:null, legacy:false,
   labs:{items:[]}, wlog:{ex:{}}, chat:{msgs:[]},
-  chatBusy:false, chatLive:'', chatDraft:'', chatImg:null, imgLimits:null, exImg:{}, dl:null, mcp:null, calBusy:false, calMsg:'', calOff:{}, restore:null, bkMsg:'', bkBusy:false, aiMsg:'', days:{}
+  chatBusy:false, chatLive:'', chatDraft:'', chatImg:null, imgLimits:null, exImg:{}, dl:null, mcp:null, calBusy:false, calMsg:'', calOff:{}, restore:null, bkMsg:'', bkBusy:false, aiMsg:'', hlMsg:'', hlOk:false, days:{}
 };
 const saveSettings = () => enqueue(() => Store.set('settings', S.settings));
 const saveDoc = k => enqueue(() => Store.set(k, S[k]));

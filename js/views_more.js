@@ -19,7 +19,7 @@ function weekSummary(ws){
     const t = sumEntries(es);
     days.push({d, past, logged:es.length>0, k:t.k, p:t.p, water:dd?(dd.water||0):0, tg:targets(d).k,
       planned: past ? daySlots(di,d).filter(sid=>mealOf(di,sid)).length : 0, marked: es.filter(e=>e.plan).length,
-      train: trainOn(d), trained: tdates.has(d), ci: (dd && dd.ci) || {}});
+      train: trainOn(d), trained: tdates.has(d), ci: (dd && dd.ci) || {}, hl: (dd && dd.health) || null});
   }
   const L = days.filter(x=>x.logged), n = L.length || 1;
   const avgK = L.reduce((a,x)=>a+x.k,0)/n, avgT = L.reduce((a,x)=>a+x.tg,0)/n;
@@ -28,6 +28,7 @@ function weekSummary(ws){
     planned:days.reduce((a,x)=>a+x.planned,0), marked:days.reduce((a,x)=>a+x.marked,0),
     trainPlan:days.filter(x=>x.train).length, trained:days.filter(x=>x.trained).length, trainPast:days.filter(x=>x.train&&x.d<td).length,
     weight: cur ? cur.kg : null, weightPrev: prev ? prev.kg : null,
+    avgSteps: avgOf(days, x=>x.hl&&x.hl.steps), avgActive: avgOf(days, x=>x.hl&&x.hl.active), exTotal: days.reduce((a,x)=>a+((x.hl&&x.hl.exMin)||0),0), hlDays: days.filter(x=>x.hl).length,
     avgSleep: avgOf(days, x=>x.ci.sleep), avgEnergy: avgOf(days, x=>x.ci.energy), avgStress: avgOf(days, x=>x.ci.stress), insight: sleepInsight(days)};
 }
 function weekTips(s){
@@ -42,6 +43,7 @@ function weekTips(s){
     if(s.avgW<8) tips.push('Acqua sotto gli 8 bicchieri al giorno: tieni una bottiglia vicino.');
   }
   if(s.trainPast>0) tips.push(s.trained>=s.trainPast ? 'Allenamenti: '+s.trained+' su '+s.trainPast+' previsti finora. Ottimo.' : 'Allenamenti: '+s.trained+' su '+s.trainPast+' previsti finora. Se salti un giorno, segnalo dal Menù.');
+  if(s.avgSteps!=null) tips.push('Attività da Salute: circa '+fmt(s.avgSteps)+' passi e '+fmt(s.avgActive||0)+' kcal attive al giorno ('+s.hlDays+(s.hlDays===1?' giorno':' giorni')+'), '+fmt(s.exTotal)+' minuti di esercizio in totale.');
   if(s.avgSleep!=null) tips.push('Sonno medio: '+f1(s.avgSleep)+' ore'+(s.avgSleep<7?'. Meno di 7 ore può aumentare fame e stanchezza.':'.'));
   if(s.avgStress!=null && s.avgStress>=4) tips.push('Lo stress è alto questa settimana: occhio agli spuntini serali.');
   if(s.insight) tips.push(s.insight);
@@ -100,6 +102,7 @@ function viewDati(){
   let h = `<section class="card"><h2>Promemoria nel calendario</h2><p class="small muted" style="margin:6px 0 10px">Scegli i promemoria e scarica il file: il telefono ti chiede di aggiungere gli eventi al Calendario, già ricorrenti e con notifica. Non si aggiornano da soli: se cambi giorni o orari, scarica di nuovo il file e togli prima quelli vecchi dal Calendario.</p>`;
   h += defs.map(x=>`<label class="check" style="${x.skip?'opacity:.5':''}"><input type="checkbox" data-calkey="${x.key}" ${x.skip?'disabled':''} ${(!S.calOff[x.key]&&!x.skip)?'checked':''}><span class="grow t"><span style="font-weight:600">${esc(x.n)}</span><br><span class="small muted">${esc(x.when)}</span></span></label>`).join('');
   h += `<div style="margin-top:12px"><button class="btn pri" data-act="calgo">Scarica i promemoria (.ics)</button></div>${S.calMsg?`<p class="small" style="margin:10px 0 0">${esc(S.calMsg)}</p>`:''}</section>`;
+  h += healthCard();
   h += `<section class="card"><h2>Esporta i tuoi dati</h2><p class="small muted" style="margin:6px 0 12px">Per portarli a un nutrizionista o al medico. Il file contiene peso, misure, esami, obiettivi e le calorie delle ultime 4 settimane. Si salva solo se confermi.</p>
     <div class="stack"><button class="btn pri" data-act="exphtml" ${S.dl?'':'disabled'}>Scarica il report (si apre e si stampa)</button><button class="btn" data-act="expcsv" ${S.dl?'':'disabled'}>Scarica i dati (CSV, per Excel)</button></div>
     ${S.dl?'':'<p class="small muted" style="margin:10px 0 0">Il download non è disponibile in questa visualizzazione.</p>'}</section>`;

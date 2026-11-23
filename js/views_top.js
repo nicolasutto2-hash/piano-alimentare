@@ -102,6 +102,7 @@ function viewMenu(){
     <div class="mini"><div class="top"><span class="small muted">Acqua</span><span class="tile t4" style="width:34px;height:34px;border-radius:11px">${ICON.drop}</span></div>
       <div class="v num">${litres(water)} <small>L · ${water}/${WATER_TARGET}</small></div>
       <div class="wrow" style="margin-top:8px"><button class="circ" data-act="water-" aria-label="Togli un bicchiere">${ICON.minus}</button><button class="plus" style="width:34px;height:34px" data-act="water+" aria-label="Aggiungi un bicchiere">${ICON.plus}</button><span class="small muted">bicchiere 250 ml</span></div></div></div>`;
+  h += ringsCard(day, S.date);
   h += calendarCard();
   const prog = isTrain(di), varied = tr!==prog;
   h += `<section class="card row between" style="padding:14px 16px"><div class="grow"><div style="font-weight:700;font-family:var(--font-d)">${tr?'Giorno di allenamento':'Giorno di riposo'}</div>

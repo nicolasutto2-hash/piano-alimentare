@@ -21,7 +21,7 @@ function chatTools(){
        await loadDay(todayStr(), true);
        const tot = sumEntries(S.days[todayStr()].entries);
        const menu = DAYS_LONG.map((n,di)=>({giorno:n, indice:di, pasti:Object.fromEntries(daySlots(di).map(sid=>{ const m=mealOf(di,sid); return [sid, m ? {indice:curPlan()[di][sid], nome:m.n} : 'saltato']; }))}));
-       return {oggi:todayStr(), obiettivo_kcal:targets(todayStr()).k, mangiato_oggi:{kcal:Math.round(tot.k),proteine:Math.round(tot.p),carboidrati:Math.round(tot.c),grassi:Math.round(tot.f)}, giorni_allenamento:S.settings.train, ultime_pesate:sortedW().slice(-5), menu};
+       const hl=S.days[todayStr()].health; return {salute_oggi:hl||null, oggi:todayStr(), obiettivo_kcal:targets(todayStr()).k, mangiato_oggi:{kcal:Math.round(tot.k),proteine:Math.round(tot.p),carboidrati:Math.round(tot.c),grassi:Math.round(tot.f)}, giorni_allenamento:S.settings.train, ultime_pesate:sortedW().slice(-5), menu};
      }},
     {name:'get_day_log', description:'Voci del diario di un giorno con i totali.', inputSchema:obj({date:dateP}),
      execute: async ({date}) => { const d=validDate(date); await loadDay(d,true); const es=S.days[d].entries; const t=sumEntries(es); return {date:d, kcal:Math.round(t.k), voci:es.map(e=>({nome:e.name,kcal:Math.round(e.k),pasto:e.slot||'altro'}))}; }},
