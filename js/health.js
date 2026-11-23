@@ -7,10 +7,17 @@ function parseHealth(text){
   const t = String(text||'').trim();
   if(!t.toUpperCase().includes(HEALTH_TAG)) return null;
   const kv = {};
-  for(const part of t.split(/[;\n\r]+/)){ const i = part.indexOf('='); if(i>0) kv[part.slice(0,i).trim().toLowerCase()] = part.slice(i+1).trim().replace(/\s/g,'').replace(',','.'); }
-  const num = (k, max) => { const x = parseFloat(kv[k]); return (isFinite(x) && x>=0 && x<=max) ? x : null; };
+  for(const part of t.split(/[;\n\r]+/)){ const i = part.indexOf('='); if(i>0) kv[part.slice(0,i).trim().toLowerCase()] = part.slice(i+1).trim().replace(/\s/g,''); }
+  // accetta 8123, 8.123, 8,123 (migliaia) e 540,5, 540.5, 1.234,5 (decimali)
+  const norm = (s, isInt) => {
+    s = String(s||'').replace(/[^\d.,-]/g,''); if(!s) return NaN;
+    if(s.includes('.') && s.includes(',')){ const dec = s.lastIndexOf('.') > s.lastIndexOf(',') ? '.' : ','; return parseFloat(s.split(dec==='.'?',':'.').join('').replace(dec,'.')); }
+    if(/^\d{1,3}([.,]\d{3})+$/.test(s) && isInt) return parseFloat(s.replace(/[.,]/g,''));
+    return parseFloat(s.replace(',','.'));
+  };
+  const num = (k, max, isInt) => { const x = norm(kv[k], isInt); return (isFinite(x) && x>=0 && x<=max) ? x : null; };
   const d = /^\d{4}-\d{2}-\d{2}$/.test(kv.data||'') ? kv.data : todayStr();
-  const out = {d, steps:num('passi',100000), active:num('attive',6000), exMin:num('esercizio',1440), stand:num('piedi',24), weight:num('peso',250), sleep:num('sonno',24), workouts:num('allenamenti',20)};
+  const out = {d, steps:num('passi',100000,true), active:num('attive',6000,true), exMin:num('esercizio',1440,true), stand:num('piedi',24,true), weight:num('peso',250), sleep:num('sonno',24), workouts:num('allenamenti',20,true)};
   if(out.weight!==null && out.weight<30) out.weight = null;
   return Object.entries(out).some(([k,v])=>k!=='d' && v!==null) ? out : null;
 }
