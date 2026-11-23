@@ -102,7 +102,6 @@ function viewMenu(){
     <div class="mini"><div class="top"><span class="small muted">Acqua</span><span class="tile t4" style="width:34px;height:34px;border-radius:11px">${ICON.drop}</span></div>
       <div class="v num">${litres(water)} <small>L · ${water}/${WATER_TARGET}</small></div>
       <div class="wrow" style="margin-top:8px"><button class="circ" data-act="water-" aria-label="Togli un bicchiere">${ICON.minus}</button><button class="plus" style="width:34px;height:34px" data-act="water+" aria-label="Aggiungi un bicchiere">${ICON.plus}</button><span class="small muted">bicchiere 250 ml</span></div></div></div>`;
-  h += ringsCard(day, S.date);
   h += calendarCard();
   const prog = isTrain(di), varied = tr!==prog;
   h += `<section class="card row between" style="padding:14px 16px"><div class="grow"><div style="font-weight:700;font-family:var(--font-d)">${tr?'Giorno di allenamento':'Giorno di riposo'}</div>
@@ -140,6 +139,7 @@ function viewMenu(){
   const cyc = S.settings.cycle||4;
   h += `<section class="card" style="margin-top:14px"><h3>Rotazione dei menù</h3><p class="small muted" style="margin:6px 0 10px">Stai guardando il menù ${weekIdxOf(S.date)+1} di ${cyc}. I menù si alternano ogni settimana, per non mangiare sempre le stesse combinazioni.</p>
     <div class="chips" style="flex-wrap:wrap;overflow:visible">${[1,2,3,4].map(n=>`<button class="chip ${cyc===n?'on':''}" data-act="cycle" data-n="${n}" aria-pressed="${cyc===n}">${n===1?'Sempre uguale':n+' settimane'}</button>`).join('')}</div></section>
+  ${ringsCard(day, S.date)}
   <p class="small muted" style="margin:14px 4px 0">Tocca un pasto per vedere ingredienti e alternative. Pesi a crudo e al netto degli scarti. Spezie, limone, aceto ed erbe aromatiche sono a volontà.</p>`;
   return h;
 }
