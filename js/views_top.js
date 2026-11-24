@@ -79,10 +79,11 @@ function calendarCard(){
     }).join('')+`</div></section>`;
 }
 
+const recText = s => s.replace(/\{([^}|]*)\|?([^}]*)\}/g, (_,a,b) => CFG.noCheese ? (b||'') : a);
 function recipeHTML(sid, idx, m, di){
   if(!m || (di>=5 && sid==='cena' && CFG.eatOut)) return '';
   const r = REC[recKey(sid, idx)]; if(!r) return '';
-  return `<details style="margin:0 0 12px"><summary class="small" style="cursor:pointer;color:var(--accent-ink);font-weight:600">Come si prepara${r[0]?' · '+r[0]+' min':''}</summary><ol class="small" style="margin:8px 0 0;padding-left:20px;display:grid;gap:6px">${r[1].map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`;
+  return `<details style="margin:0 0 12px"><summary class="small" style="cursor:pointer;color:var(--accent-ink);font-weight:600">Come si prepara${r[0]?' · '+r[0]+' min':''}</summary><ol class="small" style="margin:8px 0 0;padding-left:20px;display:grid;gap:6px">${r[1].map(x=>`<li>${esc(recText(x))}</li>`).join('')}</ol></details>`;
 }
 function viewMenu(){
   const di = dayIdx(S.date), we = di>=5, day = S.days[S.date], T = targets(), P = planTotals(di, S.date), tr = trainOn(S.date);
@@ -120,7 +121,7 @@ function viewMenu(){
     const skippable = s.id==='merenda' || s.id==='spuntino' || s.id==='post' || s.id==='pre';
     const okIdx = (s.id==='cena' && di>=5 && CFG.eatOut) || s.id==='pre' ? pool.map((_,i)=>i) : (allowedMap((S.settings.profile||{}).excl)[s.id] || pool.map((_,i)=>i));
     const opts = (skippable?`<option value="-1" ${idx<0?'selected':''}>Salta questo pasto</option>`:'') +
-      pool.map((p,i)=>[p,i]).filter(([p,i])=>i===idx || okIdx.includes(i)).map(([p,i])=>`<option value="${i}" ${i===idx?'selected':''}>${esc(p.n)} (${fmt(mealMacros(scaledMeal(p,f)).k)} kcal)</option>`).join('');
+      pool.map((p,i)=>[p,i]).filter(([p,i])=>i===idx || okIdx.includes(i)).map(([p,i])=>`<option value="${i}" ${i===idx?'selected':''}>${esc(p.n)} (${fmt(mealMacros(scaledMeal(stripExcl(p),f)).k)} kcal)</option>`).join('');
     const x = m ? mealMacros(m) : null;
     const logged = day && day.entries.find(e=>e.plan===s.id);
     const time = slotTime(s.id, tr, we);

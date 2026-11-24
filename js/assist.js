@@ -43,7 +43,7 @@ function chatTools(){
        if(!(weekday>=0&&weekday<=6)||!SLOT_IDS.includes(slot)) throw new Error('giorno o pasto non validi');
        const pool = poolFor(weekday,slot), f = dayScale(weekday, null), ex = (S.settings.profile||{}).excl;
        const ok = (slot==='cena' && weekday>=5 && CFG.eatOut) || slot==='pre' ? pool.map((_,i)=>i) : (allowedMap(ex)[slot] || pool.map((_,i)=>i));
-       return pool.map((m,i)=>({indice:i, nome:m.n, kcal:Math.round(mealMacros(scaledMeal(m,f)).k)})).filter(x=>ok.includes(x.indice));
+       return pool.map((m,i)=>({indice:i, nome:m.n, kcal:Math.round(mealMacros(scaledMeal(stripExcl(m),f)).k)})).filter(x=>ok.includes(x.indice));
      }},
     {name:'get_day_menu', description:'Menù di un giorno: orari, nomi dei pasti, ingredienti con grammature e calorie. Usalo per rispondere a "cosa mangio oggi/domani/…?".', inputSchema:obj({date:dateP}),
      execute: async ({date}) => {

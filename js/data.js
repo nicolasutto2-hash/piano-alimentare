@@ -46,7 +46,8 @@ const F = {
 
 // ---- MENU: 5 pasti, ognuno con alternative intercambiabili ----
 // Configurazione che dipende dal profilo (impostata da applyCfg in profile.js)
-const CFG = {eatOut:true, trainMode:'mattina', powder:false, snacks:true, lactoseFree:false, glutenFree:false, veg:false, fruit:false, excl:[]};
+const CFG = {noCheese:false, eatOut:true, trainMode:'mattina', powder:false, snacks:true, lactoseFree:false, glutenFree:false, veg:false, fruit:false, excl:[]};
+const STRIP_CHEESE = ['parmigiano']; // ingredienti tolti se non si mangiano formaggi (condimento)
 const SLOT_DEF = {colazione:'Colazione', spuntino:'Spuntino', pre:'Pre workout', post:"Dopo l'allenamento", pranzo:'Pranzo', merenda:'Merenda', cena:'Cena'};
 const SLOTS = Object.entries(SLOT_DEF).map(([id,n])=>({id,n})); // tutti i pasti possibili (per il diario)
 const slotsFor = (train, d) => {
@@ -185,7 +186,7 @@ function shoppingList(plan, train=[], scaleFn){
     const m = poolFor(d,sid)[idx]; if(!m || m.fixed) continue;
     const f = scaleFn ? scaleFn(d) : 1;
     const extra = [...(CFG.veg && (sid==='pranzo'||sid==='cena') ? [['verdure',200]] : []), ...(CFG.fruit && (sid==='spuntino'||sid==='merenda'||sid==='pre') ? [['frutta',150]] : [])];
-    for(const [id,g] of [...m.i, ...extra]) tot[id] = (tot[id]||0)+g*f;
+    for(const [id,g] of [...m.i, ...extra]){ if(CFG.noCheese && STRIP_CHEESE.includes(id)) continue; tot[id] = (tot[id]||0)+g*f; }
   }
   return tot;
 }
@@ -242,7 +243,7 @@ const REC = {
  'post:3':[2,['Versa il latte sui cereali integrali.']],
  'post:4':[12,['Mescola albume, uovo e avena in un impasto liscio.','Cuoci in padella antiaderente, 2 minuti per lato.','Condisci con il miele.']],
  'pranzo:0':[25,['Cuoci il riso in acqua salata (circa 12-15 minuti) e scolalo.','Cuoci il petto di pollo in padella con poco olio, 5-6 minuti per lato, fino a doratura al centro.','Taglia il pollo, unisci al riso e condisci con l\'olio a crudo.']],
- 'pranzo:1':[30,['Rosola il macinato in padella con un filo d\'olio.','Aggiungi la passata e cuoci 10-12 minuti, con sale e pepe.','Cuoci la pasta al dente, scolala e condisci con il ragù e il parmigiano.']],
+ 'pranzo:1':[30,['Rosola il macinato in padella con un filo d\'olio.','Aggiungi la passata e cuoci 10-12 minuti, con sale e pepe.','Cuoci la pasta al dente, scolala e condisci con il ragù{ e il parmigiano}.']],
  'pranzo:2':[20,['Cuoci il riso e scolalo.','Scola il tonno e uniscilo al riso.','Condisci con olio, limone e un pizzico di sale.']],
  'pranzo:3':[15,['Cuoci il pollo a fettine in padella, 3-4 minuti per lato.','Cuoci l\'uovo (sodo o all\'occhio di bue).','Scalda la piadina e farciscila con il pollo e l\'uovo.']],
  'pranzo:4':[20,['Cuoci il riso e lascialo raffreddare un po\'.','In padella rosola il prosciutto a dadini con un filo d\'olio, aggiungi le uova sbattute e mescola.','Unisci il riso, la salsa di soia e salta 2-3 minuti.']],
@@ -253,8 +254,8 @@ const REC = {
  'merenda:3':[0,['Nessuna preparazione: barretta e gallette nello zaino.']],
  'cena:0':[40,['Scalda il forno a 200 °C. Taglia le patate a spicchi, condiscile con olio e sale e infornale per 30-35 minuti.','Cuoci il pollo alla piastra, 5-6 minuti per lato.','Servi con le patate.']],
  'cena:1':[25,['Forma l\'hamburger con il macinato e un pizzico di sale.','Cuocilo in padella o sulla piastra, 4-5 minuti per lato, fino a cottura al centro.','Servi nel pane, con le patate (al forno o in padella).']],
- 'cena:2':[30,['Taglia le patate a cubetti e cuocile in padella con un po\' d\'olio e coperchio, 15 minuti.','Sbatti le uova con il parmigiano e un pizzico di sale, versale sulle patate.','Cuoci 4-5 minuti per lato, girando la frittata con un piatto.']],
+ 'cena:2':[30,['Taglia le patate a cubetti e cuocile in padella con un po\' d\'olio e coperchio, 15 minuti.','Sbatti le uova{ con il parmigiano} e un pizzico di sale, versale sulle patate.','Cuoci 4-5 minuti per lato, girando la frittata con un piatto.']],
  'cena:3':[25,['Condisci il pesce con olio, limone e un pizzico di sale.','Cuocilo in padella o al forno a 200 °C per 10-12 minuti.','Servi con il pane e le patate.']],
- 'cena:4':[45,['Cuoci la pasta molto al dente. Prepara un ragù veloce con manzo e passata (15 minuti).','In una pirofila alterna pasta, ragù e parmigiano.','Gratina in forno a 200 °C per 15 minuti.']],
+ 'cena:4':[45,['Cuoci la pasta molto al dente. Prepara un ragù veloce con manzo e passata (15 minuti).','In una pirofila alterna pasta e ragù{ e parmigiano}.','{Gratina|Scalda} in forno a 200 °C per 15 minuti.']],
  'cena:5':[25,['Cuoci il riso e scolalo.','Cuoci il tacchino a fette in padella con un filo d\'olio, 4-5 minuti per lato.','Servi insieme e condisci con l\'olio a crudo.']]
 };

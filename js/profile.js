@@ -7,7 +7,7 @@ const ACT = {
 };
 const SPORTS = {palestra:{n:'Palestra', met:5}, calcio:{n:'Calcio', met:8}, corsa:{n:'Corsa', met:9.5}, nuoto:{n:'Nuoto', met:7}, ciclismo:{n:'Ciclismo', met:7.5}, altro:{n:'Altro sport', met:6}};
 const GOALS = {lose:'Perdere peso', recomp:'Definirmi', maintain:'Mantenere il peso', gain:'Mettere massa'};
-const EXCL = {pesce:['tonno','pesce'], uova:['uova','albume'], fruttasecca:['fsecca','arachidi'], carne:['pollo','tacchino','manzo','prosciutto','tacarr']};
+const EXCL = {formaggi:['ricotta'], pesce:['tonno','pesce'], uova:['uova','albume'], fruttasecca:['fsecca','arachidi'], carne:['pollo','tacchino','manzo','prosciutto','tacarr']};
 const LACTOSE = ['yogurt','ricotta','latte'], GLUTEN = ['pasta','pane','avena','cereali','piadina','soia'];
 const clampN = (x,a,b) => Math.min(b, Math.max(a, x));
 
@@ -34,6 +34,7 @@ function calcPlan(p){
 }
 function applyCfg(p){
   const ex = p.excl || {};
+  CFG.noCheese = !!ex.formaggi;
   CFG.eatOut = p.eatOut!==false;
   CFG.trainMode = (p.trainWhen==='mattina' && toMin(p.trainTime||'09:00')<12*60) ? 'mattina' : 'sera';
   CFG.powder = !!p.powder && CFG.trainMode==='mattina';
@@ -91,11 +92,27 @@ const pTarget = () => S.settings.pTarget ?? TARGET_P;
 const fTarget = () => S.settings.fTarget ?? TARGET_F;
 
 // ---- porzioni adattate alle calorie di ogni giorno ----
+const stripExcl = m => (!m || m.fixed || !CFG.noCheese) ? m : {...m, i:m.i.filter(([id])=>!STRIP_CHEESE.includes(id))};
+// sostituisce nel piano i pasti che ora non sono permessi (tiene le altre scelte)
+function repairPlans(){
+  const ex = (S.settings.profile||{}).excl; if(!ex) return false;
+  const allow = allowedMap(ex); let changed = false;
+  for(const plan of S.settings.plans) plan.forEach((day, d) => {
+    for(const slot of ['colazione','spuntino','post','pranzo','merenda','cena']){
+      const idx = day[slot]; if(idx<0) continue;
+      if(slot==='cena' && d>=5 && CFG.eatOut) continue;
+      const list = allow[slot]; if(!list || !list.length || list.includes(idx)) continue;
+      const nx = list.find(i=>i>idx); day[slot] = nx!==undefined ? nx : list[0]; changed = true;
+    }
+  });
+  return changed;
+}
 function rawMeal(day, slot){
   const idx = curPlan()[day][slot]; if(idx<0) return null;
   const pool = poolFor(day, slot);
   let m = pool[idx] || (slot==='pre' ? pool[0] : null); if(!m) return null;
   if(m.fixed){ return slot==='pre' ? {...m, fixed:{k:(S.settings.preKcal ?? 10), p:0, c:0, f:0}} : m; }
+  m = stripExcl(m);
   const extra = [];
   if(CFG.veg && (slot==='pranzo'||slot==='cena')) extra.push(['verdure',200]);
   if(CFG.fruit && (slot==='spuntino'||slot==='merenda'||slot==='pre')) extra.push(['frutta',150]);
@@ -153,7 +170,7 @@ function obStepHTML(){
     <div><div class="small muted" style="margin-bottom:4px">Cosa non puoi o non vuoi mangiare</div>
       ${obToggle('excl.lattosio','Intolleranza al lattosio','Uso latticini senza lattosio')}
       ${obToggle('excl.glutine','Celiachia o glutine','Uso pane, pasta e cereali senza glutine')}
-      ${obToggle('excl.pesce','Niente pesce')}${obToggle('excl.uova','Niente uova')}${obToggle('excl.fruttasecca','Allergia alla frutta secca')}${obToggle('excl.carne','Niente carne')}</div>
+      ${obToggle('excl.formaggi','Niente formaggi','Né ricotta né parmigiano, né derivati')}${obToggle('excl.pesce','Niente pesce')}${obToggle('excl.uova','Niente uova')}${obToggle('excl.fruttasecca','Allergia alla frutta secca')}${obToggle('excl.carne','Niente carne')}</div>
     ${few.length?`<div class="note">Con queste scelte il menù ha poche alternative a ${few.join(', ')}. Funziona lo stesso, ma sarà meno vario.</div>`:''}
     <div><div class="small muted" style="margin-bottom:4px">Verdura e frutta</div>${obToggle('veg','Aggiungi la verdura a pranzo e a cena','Circa 200 g di verdure cotte')}${obToggle('fruit','Aggiungi la frutta negli spuntini','Circa 150 g')}</div>
     <div><label for="ob-notes">Preferenze e abitudini (l'assistente le tiene a mente)</label><textarea id="ob-notes" data-ob="notes" rows="3" placeholder="Per esempio: a colazione bevo solo acqua; non mangio verdure né frutta" style="font:inherit;color:var(--fg);background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:10px 12px;width:100%">${esc(p.notes||'')}</textarea></div>
@@ -199,13 +216,14 @@ function finishProfile(){
   const ob = S.ob, p = ob.draft, old = S.settings.profile, c = calcPlan(p);
   p.age = +p.age; p.height = +p.height; p.weight = +p.weight; p.trainMin = +p.trainMin || 60;
   if(p.trainWhen==='mattina' && toMin(p.trainTime)>=12*60) p.trainWhen = 'pomeriggio';
-  const planChanged = !old || ['snacks','eatOut','trainWhen','powder'].some(k=>old[k]!==p[k]) || JSON.stringify(old.excl||{})!==JSON.stringify(p.excl||{});
+  const planChanged = !old || ['snacks','eatOut','trainWhen','powder'].some(k=>old[k]!==p[k]);
   const legacy = S.legacy && !old;
   S.settings.profile = p;
   applyCfg(p);
   if(!legacy){ S.settings.target = c.target; S.settings.trainBonus = c.trainBonus; S.settings.train = [...(p.trainDays||[])].sort((a,b)=>a-b); }
   S.settings.pTarget = c.p; S.settings.fTarget = c.f;
   if(!legacy && planChanged) S.settings.plans = allPlans(allowedMap(p.excl), p.snacks!==false);
+  repairPlans();
   if(!old){
     S.settings.startWeek = S.settings.startWeek || shift(todayStr(), -dayIdx(todayStr()));
     if(!legacy) S.body = {weights:[{d:todayStr(), kg:p.weight}], measures:[]};

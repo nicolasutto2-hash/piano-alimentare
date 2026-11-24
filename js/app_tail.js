@@ -456,7 +456,7 @@ async function loadAll(){
   if(w && w.ex) S.wlog = w;
   if(c && Array.isArray(c.threads)) S.chat = {threads:c.threads, cur:null};
   else if(c && Array.isArray(c.msgs) && c.msgs.length) S.chat = {threads:[{id:uid(), title:(c.msgs.find(m=>m.role==='user')||{content:'Conversazione precedente'}).content.slice(0,48), t:Date.now(), msgs:c.msgs}], cur:null};
-  if(S.settings.profile) applyCfg(S.settings.profile);
+  if(S.settings.profile){ applyCfg(S.settings.profile); if(repairPlans()) saveSettings(); }
   else if(S.legacy){ applyCfg({...newProfile(), powder:true, trainWhen:'mattina', trainTime:'09:00'}); if(!S.settings.startWeek) S.settings.startWeek = '2026-11-23'; }
   if(!S.settings.profile){ if(!S.ob) startOnboarding(false); } else if(S.ob && !S.ob.edit) S.ob = null;
 }
