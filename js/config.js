@@ -6,5 +6,9 @@ window.CONFIG = {
   proxyUrl: '',
   model: 'claude-haiku-5-5',
   priceIn: 0.10,
-  priceOut: 0.50
+  priceOut: 0.50,
+  models: {
+    haiku:  {id:'claude-haiku-5-5',  label:'Haiku (economico, veloce)', priceIn:0.10, priceOut:0.50},
+    sonnet: {id:'claude-sonnet-5-5', label:'Sonnet (più accurato)',     priceIn:2.00, priceOut:10.00, effort:'medium'}
+  }
 };

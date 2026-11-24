@@ -188,15 +188,21 @@ function viewEsami(){
 // ---- assistente ----
 const esc2 = t => esc(t).replace(/\n/g,'<br>');
 function chatHTML(){
-  const m = S.chat.msgs;
+  const m = chatMsgs();
   let h = '';
   if(!m.length && !S.chatBusy){
     h += `<div class="card"><h2>Chiedimi quello che vuoi</h2><p class="muted" style="margin:6px 0 12px">Scrivi in modo naturale, anche con una foto del piatto o della scheda. Posso segnare quello che mangi o bevi calcolando le calorie, cambiare un pasto del menù, aggiornare l'obiettivo, inserire la scheda, il peso, le misure o un esame.</p>
       <div class="stack" style="gap:8px">${['Ieri sera ho mangiato una pizza margherita e due birre medie, segnalo','Sostituisci la cena di martedì con qualcosa di più leggero','Mercoledì: panca 4x8, squat 4x10, rematore 3x12','Oggi peso 77,5 kg','Come sto andando questa settimana?'].map(t=>`<button class="btn" style="text-align:left" data-act="chatsug" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>`;
   }
   for(const x of m) h += `<div class="bub ${x.role==='user'?'me':'ai'}">${esc2(x.content)}</div>`;
-  if(S.chatBusy) h += `<div class="bub ai">${S.chatLive?esc2(S.chatLive):'<span class="muted">Sto pensando…</span>'}</div>`;
+  if(S.chatBusy && S.chatBusyId===S.chat.cur) h += `<div class="bub ai">${S.chatLive?esc2(S.chatLive):'<span class="muted">Sto pensando…</span>'}</div>`;
   return h;
+}
+function chatHistHTML(){
+  const ts = S.chat.threads;
+  const fm = t => { const d = new Date(t); return d.getDate()+' '+MONTHS[d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes()); };
+  return `<section class="card"><div class="row between"><h2>Cronologia</h2><button class="btn sm" data-act="chathist">Chiudi</button></div>`+
+    (ts.length ? ts.map(t=>`<div class="entry"><button class="foodrow" style="border:0;padding:0" data-act="chatopen" data-id="${t.id}"><span style="font-weight:500">${esc(t.title||'Conversazione')}</span><span class="muted small num">${fm(t.t)} · ${t.msgs.length}</span></button><button class="x" data-act="chatdel" data-id="${t.id}" aria-label="Elimina la conversazione">Elimina</button></div>`).join('') : '<p class="muted" style="margin:10px 0 0">Nessuna conversazione salvata.</p>')+`</section>`;
 }
 function viewAssist(){
   if(!S.sample){
@@ -210,9 +216,11 @@ function viewAssist(){
       <div style="margin-top:12px"><button class="btn pri" data-act="aikeysave">Attiva l'assistente</button></div>${S.aiMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.aiMsg)}</p>`:''}</div>`;
   }
   const imgOk = !!S.imgLimits, acc = imgOk ? S.imgLimits.mediaTypes.join(',') : '';
-  return `<div id="chatlog">${chatHTML()}</div>
+  const top = `<div class="row" style="margin-bottom:12px"><button class="btn sm" data-act="chatnew" ${S.chatBusy?'disabled':''}>Nuova chat</button><button class="btn sm" data-act="chathist">Cronologia${S.chat.threads.length?' ('+S.chat.threads.length+')':''}</button><span class="grow"></span>${chatMsgs().length?'<button class="btn sm ghost" data-act="chatcopy">Copia la conversazione</button>':''}</div>`;
+  if(S.chatView==='hist') return top + chatHistHTML();
+  return top + `<div id="chatlog">${chatHTML()}</div>
     ${S.chatImg?`<div class="row" style="margin-top:6px"><img src="${S.chatImg.url}" alt="Foto allegata" style="height:52px;width:52px;object-fit:cover;border-radius:12px"><span class="small grow">Foto allegata</span><button class="x" style="border:0;background:transparent;color:var(--muted)" data-act="chatimgdel">Togli</button></div>`:''}
     <form id="chatform" class="chatbar" autocomplete="off">${imgOk?`<button type="button" class="circ" style="width:46px;height:46px;background:var(--surface)" data-act="chatattach" aria-label="Allega una foto" ${S.chatBusy?'disabled':''}>${ICON.clip}</button><input id="chatfile" type="file" accept="${acc}" hidden>`:''}<input id="chatin" type="text" placeholder="${S.chatImg?'Aggiungi un commento (facoltativo)':'Scrivi qui…'}" aria-label="Messaggio per l'assistente" value="${esc(S.chatDraft)}" ${S.chatBusy?'disabled':''}>
     ${S.chatBusy?`<button type="button" class="btn" data-act="chatstop">Stop</button>`:`<button class="plus" style="width:46px;height:46px" aria-label="Invia">${ICON.send}</button>`}</form>
-    <p class="small muted" style="margin:8px 4px 0"><button class="x" style="border:0;background:transparent;color:var(--muted);padding:0;text-decoration:underline" data-act="${AI.mode()==='proxy'?'aicodereset':'aikeyreset'}">${AI.mode()==='proxy'?'Cambia codice':'Rimuovi la chiave'}</button> · Spesa stimata questo mese: ${usageCost()<0.01?'meno di 1 centesimo':'circa $'+usageCost().toFixed(2).replace('.',',')}<br>L'assistente stima le calorie: sono valori indicativi. Non sostituisce una visita da un professionista sanitario.</p>`;
+    <p class="small muted" style="margin:8px 4px 0"><button class="x" style="border:0;background:transparent;color:var(--muted);padding:0;text-decoration:underline" data-act="${AI.mode()==='proxy'?'aicodereset':'aikeyreset'}">${AI.mode()==='proxy'?'Cambia codice':'Rimuovi la chiave'}</button> · Spesa stimata questo mese: ${usageCost()<0.01?'meno di 1 centesimo':'circa $'+usageCost().toFixed(2).replace('.',',')}<br><label for="aimodel" style="display:inline;margin:0">Modello</label> <select id="aimodel" style="width:auto;min-height:34px;padding:4px 8px">${Object.entries(CONFIG.models).map(([k,m])=>`<option value="${k}" ${(S.settings.aiModel||'haiku')===k?'selected':''}>${m.label}</option>`).join('')}</select><br>L'assistente stima le calorie: sono valori indicativi. Non sostituisce una visita da un professionista sanitario.</p>`;
 }

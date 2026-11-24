@@ -9,7 +9,7 @@ function rules(){
   const goal = c ? ({lose:'perdere peso', recomp:'definirsi', maintain:'mantenere il peso', gain:'mettere massa'})[c.goalUsed] : 'stare meglio con l\'alimentazione';
   const who = p.age ? `${p.sex==='F'?'una persona di sesso femminile':'una persona di sesso maschile'} di ${p.age} anni (${p.height} cm, ${p.weight} kg all'inizio)` : 'una persona';
   return `Sei l'assistente dentro l'app "Piano Alimentare" di ${who}, con l'obiettivo di ${goal}${(S.settings.train||[]).length?`, che si allena (${sportLabel()}) ${(S.settings.train||[]).length} volte a settimana`:''}. Rispondi in italiano, in modo breve, caldo e pratico, senza giudicare e senza diete estreme. Sei un supporto organizzativo ed educativo: non fai diagnosi e non interpreti esami del sangue (registrali e, se servono commenti, invita a parlarne con il medico). Non proporre mai di scendere sotto ${p.sex==='F'?1500:1800} kcal al giorno e non proporre tagli di calorie nelle prime 3 settimane; ${p.age && p.age<18 ? 'la persona è minorenne: niente deficit calorici e invita a parlarne con un medico;' : ''} nei giorni di allenamento all'obiettivo si aggiungono ${trainBonus()} kcal.
-Per cambiare dati nell'app USA SEMPRE gli strumenti, poi conferma in una frase cosa hai fatto. Se manca un'informazione indispensabile, fai una sola domanda breve. Quando stimi le calorie di cibi o bevande, usa porzioni tipiche italiane se non sono indicate e dillo.
+${p.notes && String(p.notes).trim() ? 'Preferenze e abitudini della persona (rispettale sempre): '+String(p.notes).trim().slice(0,600)+'.\n' : ''}Per cambiare dati nell'app USA SEMPRE gli strumenti, poi conferma in una frase cosa hai fatto. Se manca un'informazione indispensabile, fai una sola domanda breve. Quando stimi le calorie di cibi o bevande, usa porzioni tipiche italiane se non sono indicate e dillo.
 Oggi è ${DAYS_LONG[dayIdx(todayStr())]} ${todayStr()}. Giorni della settimana: 0=Lunedì, 1=Martedì, 2=Mercoledì, 3=Giovedì, 4=Venerdì, 5=Sabato, 6=Domenica. Obiettivo di oggi: ${fmt(t.k)} kcal. Giorni di allenamento: ${(S.settings.train||[]).map(i=>DAYS_LONG[i]).join(', ')||'nessuno'}. Pasti possibili: ${SLOT_IDS.join(', ')} (nei giorni normali colazione, spuntino, pranzo, merenda, cena; nei giorni di allenamento ${CFG.trainMode==='mattina'?`colazione, pre${CFG.powder?' = polvere pre workout':''}, post = pasto dopo l'allenamento, pranzo, merenda, cena`:'colazione, spuntino, pranzo, pre = spuntino prima di allenarsi, cena'}). Il programma di allenamento è nei giorni indicati; se un giorno cambia usa set_day_training. Per segnare qualcosa fuori pasto usa "altro".${CFG.eatOut?' Il sabato e la domenica la cena è fuori casa.':''}`;
 }
 function chatTools(){
@@ -20,7 +20,7 @@ function chatTools(){
      execute: async () => {
        await loadDay(todayStr(), true);
        const tot = sumEntries(S.days[todayStr()].entries);
-       const menu = DAYS_LONG.map((n,di)=>({giorno:n, indice:di, pasti:Object.fromEntries(daySlots(di).map(sid=>{ const m=mealOf(di,sid); return [sid, m ? {indice:curPlan()[di][sid], nome:m.n} : 'saltato']; }))}));
+       const menu = DAYS_LONG.map((n,di)=>({giorno:n, indice:di, pasti:Object.fromEntries(daySlots(di).map(sid=>{ const m=mealOf(di,sid); return [sid, m ? {indice:curPlan()[di][sid], nome:m.n, kcal:Math.round(mealMacros(m).k)} : 'saltato']; }))}));
        const hl=S.days[todayStr()].health; return {salute_oggi:hl||null, oggi:todayStr(), obiettivo_kcal:targets(todayStr()).k, mangiato_oggi:{kcal:Math.round(tot.k),proteine:Math.round(tot.p),carboidrati:Math.round(tot.c),grassi:Math.round(tot.f)}, giorni_allenamento:S.settings.train, ultime_pesate:sortedW().slice(-5), menu};
      }},
     {name:'get_day_log', description:'Voci del diario di un giorno con i totali.', inputSchema:obj({date:dateP}),
@@ -38,8 +38,20 @@ function chatTools(){
      }},
     {name:'delete_log_entries', description:'Elimina dal diario le voci il cui nome contiene il testo indicato.', inputSchema:obj({date:dateP, name_contains:{type:'string'}}, ['name_contains']),
      execute: async ({date,name_contains}) => { const d=validDate(date); await loadDay(d,true); const q=String(name_contains).toLowerCase(); const before=S.days[d].entries.length; S.days[d].entries=S.days[d].entries.filter(e=>!e.name.toLowerCase().includes(q)); saveDay(d); touch(); return {eliminate:before-S.days[d].entries.length}; }},
-    {name:'list_meal_options', description:'Alternative disponibili per un pasto di un giorno, con indice e calorie.', inputSchema:obj({weekday:{type:'integer'}, slot:{type:'string'}}, ['weekday','slot']),
-     execute: ({weekday,slot}) => { if(!(weekday>=0&&weekday<=6)||!SLOT_IDS.includes(slot)) throw new Error('giorno o pasto non validi'); return poolFor(weekday,slot).map((m,i)=>({indice:i,nome:m.n,kcal:Math.round(mealMacros(m).k)})); }},
+    {name:'list_meal_options', description:'Alternative disponibili per un pasto di un giorno (già adattate alle esclusioni della persona), con indice, nome e calorie.', inputSchema:obj({weekday:{type:'integer'}, slot:{type:'string'}}, ['weekday','slot']),
+     execute: ({weekday,slot}) => {
+       if(!(weekday>=0&&weekday<=6)||!SLOT_IDS.includes(slot)) throw new Error('giorno o pasto non validi');
+       const pool = poolFor(weekday,slot), f = dayScale(weekday, null), ex = (S.settings.profile||{}).excl;
+       const ok = (slot==='cena' && weekday>=5 && CFG.eatOut) || slot==='pre' ? pool.map((_,i)=>i) : (allowedMap(ex)[slot] || pool.map((_,i)=>i));
+       return pool.map((m,i)=>({indice:i, nome:m.n, kcal:Math.round(mealMacros(scaledMeal(m,f)).k)})).filter(x=>ok.includes(x.indice));
+     }},
+    {name:'get_day_menu', description:'Menù di un giorno: orari, nomi dei pasti, ingredienti con grammature e calorie. Usalo per rispondere a "cosa mangio oggi/domani/…?".', inputSchema:obj({date:dateP}),
+     execute: async ({date}) => {
+       const d = validDate(date), di = dayIdx(d);
+       await loadDay(d, true);
+       return withPlanWeek(weekIdxOf(d), () => ({date:d, giorno:DAYS_LONG[di], allenamento:trainOn(d), obiettivo_kcal:targets(d).k,
+         pasti: daySlots(di, d).map(sid => { const m = mealOf(di, sid, d); return m ? {pasto:sid, ora:slotTime(sid, trainOn(d), di>=5), nome:m.n, kcal:Math.round(mealMacros(m).k), ingredienti:(m.i||[]).map(([id,g])=>foodName(id)+' '+g+' '+(F[id].unit||'g'))} : {pasto:sid, nome:'saltato'}; })}));
+     }},
     {name:'swap_meal', description:'Cambia un pasto del menù settimanale scegliendo un indice dalle alternative (-1 per saltarlo, solo per spuntino, post, merenda).', inputSchema:obj({weekday:{type:'integer'}, slot:{type:'string'}, option_index:{type:'integer'}}, ['weekday','slot','option_index']),
      execute: ({weekday,slot,option_index}) => {
        if(!(weekday>=0&&weekday<=6)||!SLOT_IDS.includes(slot)) throw new Error('giorno o pasto non validi');
@@ -93,6 +105,13 @@ function chatErr(e){
   if(e && e.code==='rate_limited') return 'Troppe richieste ravvicinate. Aspetta qualche secondo e riprova.';
   return 'Non riesco a rispondere in questo momento. Riprova tra poco.';
 }
+const chatThread = () => S.chat.threads.find(t => t.id===S.chat.cur) || null;
+const chatMsgs = () => { const t = chatThread(); return t ? t.msgs : []; };
+function ensureThread(){
+  let t = chatThread();
+  if(!t){ t = {id:uid(), title:'', t:Date.now(), msgs:[]}; S.chat.threads.unshift(t); S.chat.cur = t.id; if(S.chat.threads.length>30) S.chat.threads.length = 30; }
+  return t;
+}
 function paintChat(){
   const el = document.getElementById('chatlog'); if(!el) return;
   el.innerHTML = chatHTML();
@@ -103,18 +122,38 @@ async function sendChat(text){
   const img = S.chatImg;
   if((!text && !img) || S.chatBusy || !S.sample) return;
   if(!text) text = 'Guarda questa foto.';
-  S.chat.msgs.push({role:'user',content:text + (img?' (foto allegata)':'')}); S.chatDraft=''; S.chatImg=null; S.chatBusy=true; S.chatLive='';
+  S.chatView = '';
+  const th = ensureThread();
+  if(!th.title) th.title = text.slice(0,48);
+  th.t = Date.now();
+  th.msgs.push({role:'user',content:text + (img?' (foto allegata)':'')}); S.chatDraft=''; S.chatImg=null; S.chatBusy=true; S.chatBusyId=th.id; S.chatLive='';
   chatCtl = new AbortController(); render(); window.scrollTo(0, document.body.scrollHeight);
-  let turns = S.chat.msgs.slice(-14); while(turns.length && turns[0].role!=='user') turns.shift();
+  let turns = th.msgs.slice(-14).map(m=>({role:m.role,content:m.content})); while(turns.length && turns[0].role!=='user') turns.shift();
+  const trace = [];
+  const tools = chatTools().map(t => ({...t, execute: async inp => {
+    try{ const r = await t.execute(inp); trace.push({tool:t.name, input:inp, result:r}); return r; }
+    catch(e){ trace.push({tool:t.name, input:inp, error:String(e && e.message || e)}); throw e; } }}));
   try{
-    const r = await S.sample([{role:'user',content:rules()}, ...turns], {cache:false, signal:chatCtl.signal, tools:chatTools(), ...(img?{images:[img.blob]}:{}), onText:({text})=>{ S.chatLive=text; paintChat(); }});
-    S.chat.msgs.push({role:'assistant',content:(r.text||'Fatto.').trim()});
+    const r = await S.sample([{role:'user',content:rules()}, ...turns], {cache:false, signal:chatCtl.signal, tools, ...(img?{images:[img.blob]}:{}), onText:({text})=>{ if(S.chat.cur===th.id) { S.chatLive=text; paintChat(); } }});
+    th.msgs.push({role:'assistant',content:(r.text||'Fatto.').trim(), trace});
   }catch(e){
-    S.chat.msgs.push({role:'assistant',content: e && e.code==='cancelled' ? ((e.text||'')+' (interrotto)').trim() : chatErr(e)});
+    th.msgs.push({role:'assistant',content: e && e.code==='cancelled' ? ((e.text||'')+' (interrotto)').trim() : chatErr(e), trace, err:(e&&e.code)||'errore'});
   }
-  S.chatBusy=false; S.chatLive=''; chatCtl=null;
-  S.chat.msgs = S.chat.msgs.slice(-30);
+  S.chatBusy=false; S.chatBusyId=null; S.chatLive=''; chatCtl=null;
+  th.msgs = th.msgs.slice(-40);
   saveDoc('chat'); render(); window.scrollTo(0, document.body.scrollHeight);
+}
+function chatTranscript(){
+  const t = chatThread(); if(!t) return '';
+  const md = AI.model();
+  let s = 'CONVERSAZIONE ASSISTENTE · '+todayStr()+' · modello '+md.id+'\n\n';
+  for(const m of t.msgs){
+    s += (m.role==='user' ? 'UTENTE: ' : 'ASSISTENTE: ') + m.content + '\n';
+    for(const x of (m.trace||[])) s += '   · '+x.tool+' '+JSON.stringify(x.input).slice(0,300)+' → '+(x.error?'ERRORE '+x.error:JSON.stringify(x.result).slice(0,300))+'\n';
+    if(m.err) s += '   · errore: '+m.err+'\n';
+    s += '\n';
+  }
+  return s;
 }
 
 // ---- "Descrivi": stima di calorie da una frase ----

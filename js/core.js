@@ -47,7 +47,7 @@ const S = {
   page:'menu', planWeek:0, spesaWeek:null, nav:false, date:todayStr(), ready:false, sample:null,
   settings:{plans:allPlans(), cycle:4, target:TARGET_KCAL, checked:{}, train:[], workout:{}, preKcal:10, weighDay:0, profile:null, startWeek:null, trainBonus:150, pTarget:null, fTarget:null, goal:null, cal:{}, favs:[], adjAt:null},
   body:{weights:[], measures:[]}, ob:null, legacy:false,
-  labs:{items:[]}, wlog:{ex:{}}, chat:{msgs:[]},
+  labs:{items:[]}, wlog:{ex:{}}, chat:{threads:[], cur:null}, chatView:'', chatBusyId:null,
   chatBusy:false, chatLive:'', chatDraft:'', chatImg:null, imgLimits:null, exImg:{}, dl:null, mcp:null, calBusy:false, calMsg:'', calOff:{}, restore:null, bkMsg:'', bkBusy:false, aiMsg:'', hlMsg:'', hlOk:false, showSteps:false, days:{}
 };
 const saveSettings = () => enqueue(() => Store.set('settings', S.settings));

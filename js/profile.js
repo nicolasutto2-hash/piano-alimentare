@@ -156,6 +156,7 @@ function obStepHTML(){
       ${obToggle('excl.pesce','Niente pesce')}${obToggle('excl.uova','Niente uova')}${obToggle('excl.fruttasecca','Allergia alla frutta secca')}${obToggle('excl.carne','Niente carne')}</div>
     ${few.length?`<div class="note">Con queste scelte il menù ha poche alternative a ${few.join(', ')}. Funziona lo stesso, ma sarà meno vario.</div>`:''}
     <div><div class="small muted" style="margin-bottom:4px">Verdura e frutta</div>${obToggle('veg','Aggiungi la verdura a pranzo e a cena','Circa 200 g di verdure cotte')}${obToggle('fruit','Aggiungi la frutta negli spuntini','Circa 150 g')}</div>
+    <div><label for="ob-notes">Preferenze e abitudini (l'assistente le tiene a mente)</label><textarea id="ob-notes" data-ob="notes" rows="3" placeholder="Per esempio: a colazione bevo solo acqua; non mangio verdure né frutta" style="font:inherit;color:var(--fg);background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:10px 12px;width:100%">${esc(p.notes||'')}</textarea></div>
     <p class="small muted">Per allergie gravi o patologie (diabete, reni, celiachia diagnosticata) segui le indicazioni del tuo medico: questa app non le sostituisce.</p></div>`;
   }
   const c = calcPlan(p);

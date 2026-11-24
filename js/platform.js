@@ -37,11 +37,13 @@ const AI = {
     else e.code = 'upstream';
     return e;
   },
+  model(){ const k = S.settings.aiModel; return (CONFIG.models && CONFIG.models[k]) || CONFIG.models.haiku; },
   countUsage(j){
     try{
       const u = j && j.usage; if(!u) return;
-      const m = todayStr().slice(0,7), cur = S.settings.usage && S.settings.usage.month===m ? S.settings.usage : {month:m, inTok:0, outTok:0, calls:0};
-      cur.inTok += (u.input_tokens||0) + (u.cache_creation_input_tokens||0) + (u.cache_read_input_tokens||0); cur.outTok += u.output_tokens||0; cur.calls += 1;
+      const m = todayStr().slice(0,7), cur = S.settings.usage && S.settings.usage.month===m ? S.settings.usage : {month:m, inTok:0, outTok:0, calls:0, cost:0}, md = this.model();
+      const it = (u.input_tokens||0) + (u.cache_creation_input_tokens||0) + (u.cache_read_input_tokens||0), ot = u.output_tokens||0;
+      cur.inTok += it; cur.outTok += ot; cur.calls += 1; cur.cost = (cur.cost||0) + (it*md.priceIn + ot*md.priceOut)/1e6;
       S.settings.usage = cur; saveSettings();
     }catch(e){}
   },
@@ -51,7 +53,7 @@ const AI = {
     try{
       if(direct) r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST', signal,
         headers:{'content-type':'application/json','x-api-key':Secret.get('apikey'),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:CONFIG.model, max_tokens:2000, ...body})});
+        body:JSON.stringify({model:this.model().id, max_tokens:2000, ...(this.model().effort?{output_config:{effort:this.model().effort}}:{}), ...body})});
       else r = await fetch(CONFIG.proxyUrl, {method:'POST', headers:{'content-type':'application/json','x-access-code':S.settings.aiCode}, body:JSON.stringify(body), signal});
     }catch(e){ if(e && e.name==='AbortError'){ const x = new Error('cancelled'); x.code='cancelled'; throw x; } const x = new Error('rete'); x.code='network'; throw x; }
     const j = await r.json().catch(()=>null);
@@ -60,7 +62,7 @@ const AI = {
     return j;
   }
 };
-const usageCost = () => { const u = S.settings.usage; return u && u.month===todayStr().slice(0,7) ? (u.inTok*CONFIG.priceIn + u.outTok*CONFIG.priceOut)/1e6 : 0; };
+const usageCost = () => { const u = S.settings.usage; if(!u || u.month!==todayStr().slice(0,7)) return 0; return u.cost!=null ? u.cost : (u.inTok*CONFIG.priceIn + u.outTok*CONFIG.priceOut)/1e6; };
 function blobToImageBlock(blob){
   return new Promise((res,rej)=>{
     const fr = new FileReader();

@@ -56,10 +56,10 @@ const slotsFor = (train, d) => {
 const POOLS = {
   colazione:[
     {n:'Yogurt greco, avena, miele e cacao', i:[['yogurt',250],['avena',60],['miele',15],['cacao',5]]},
-    {n:'Uova strapazzate, pane e spremuta', i:[['uova',120],['albume',60],['pane',70],['succo',200]]},
+    {n:'Uova strapazzate e pane', i:[['uova',120],['albume',60],['pane',90]]},
     {n:'Pancake proteici all\'avena', i:[['avena',60],['albume',120],['uova',60],['cacao',5],['miele',10],['arachidi',10]]},
-    {n:'Latte, cereali integrali e yogurt', i:[['latte',250],['cereali',70],['yogurt',125]]},
-    {n:'Pane con ricotta e miele, latte', i:[['pane',80],['ricotta',80],['miele',15],['latte',150]]}
+    {n:'Cereali integrali e yogurt greco', i:[['cereali',70],['yogurt',250]]},
+    {n:'Pane con ricotta e miele', i:[['pane',100],['ricotta',80],['miele',15]]}
   ],
   spuntino:[
     {n:'Yogurt greco con miele e frutta secca', i:[['yogurt',170],['miele',10],['fsecca',10]]},
@@ -226,10 +226,10 @@ const MEASURES = [['vita','Vita'],['fianchi','Fianchi'],['petto','Petto'],['brac
 // ---- ricette: [minuti, [passaggi]] per "pasto:indice" ----
 const REC = {
  'colazione:0':[3,['Versa lo yogurt in una ciotola.','Aggiungi l\'avena, il miele e il cacao.','Mescola: se la vuoi più morbida, lascia riposare 5 minuti.']],
- 'colazione:1':[10,['Scalda una padella antiaderente con un filo d\'olio o poca acqua.','Sbatti le uova con l\'albume e un pizzico di sale, versale e mescola a fuoco medio finché sono cotte.','Tosta il pane e servi con la spremuta.']],
+ 'colazione:1':[10,['Scalda una padella antiaderente con un filo d\'olio o poca acqua.','Sbatti le uova con l\'albume e un pizzico di sale, versale e mescola a fuoco medio finché sono cotte.','Tosta il pane e servi con le uova.']],
  'colazione:2':[12,['Frulla o mescola avena, albume, uovo e cacao fino a un impasto liscio.','Cuoci piccole porzioni in padella antiaderente 2 minuti per lato.','Servi con miele e crema di arachidi.']],
- 'colazione:3':[3,['Versa il latte in una ciotola con i cereali.','Aggiungi lo yogurt greco a parte o sopra.']],
- 'colazione:4':[4,['Taglia il pane e spalmaci la ricotta.','Aggiungi il miele.','Accompagna con il latte, freddo o caldo.']],
+ 'colazione:3':[3,['Versa lo yogurt greco in una ciotola.','Aggiungi i cereali integrali all\'ultimo, per tenerli croccanti.']],
+ 'colazione:4':[4,['Taglia il pane e spalmaci la ricotta.','Aggiungi il miele.']],
  'spuntino:0':[2,['Metti lo yogurt in un contenitore.','Aggiungi miele e frutta secca tritata.']],
  'spuntino:1':[2,['Spalma la crema di arachidi sulle gallette.']],
  'spuntino:2':[0,['Nessuna preparazione: portala con te.']],

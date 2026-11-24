@@ -369,6 +369,14 @@ document.addEventListener('click', ev => {
   else if(a==='labdel'){ S.labs.items = S.labs.items.filter(x=>x.id!==el.dataset.id); saveDoc('labs'); render(); }
   // assistente
   else if(a==='chatsug') sendChat(el.dataset.t);
+  else if(a==='chatnew'){ S.chat.cur=null; S.chatView=''; S.chatDraft=''; render(); window.scrollTo(0,0); }
+  else if(a==='chathist'){ S.chatView = S.chatView==='hist' ? '' : 'hist'; render(); window.scrollTo(0,0); }
+  else if(a==='chatopen'){ S.chat.cur=el.dataset.id; S.chatView=''; saveDoc('chat'); render(); window.scrollTo(0, document.body.scrollHeight); }
+  else if(a==='chatdel'){ S.chat.threads = S.chat.threads.filter(x=>x.id!==el.dataset.id); if(S.chat.cur===el.dataset.id) S.chat.cur=null; saveDoc('chat'); render(); }
+  else if(a==='chatcopy'){
+    const txt = chatTranscript();
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(()=>toast('Conversazione copiata: incollala nella chat con me')).catch(()=>toast('Non riesco a copiare.'));
+  }
   else if(a==='chatstop'){ if(chatCtl) chatCtl.abort(); }
 });
 function readPick(file, cb){
@@ -390,6 +398,7 @@ document.addEventListener('change', ev => {
   }
   else if(el.id==='chatfile'){ readPick(el.files && el.files[0], img => { S.chatImg=img; render(); const c=$('chatin'); if(c) c.focus(); }); }
   else if(el.id==='descfile'){ readPick(el.files && el.files[0], img => { SH.img=img; paintSheet(); }); }
+  else if(el.id==='aimodel'){ S.settings.aiModel = el.value; saveSettings(); toast('Modello: '+AI.model().label); }
   else if(el.id==='shslot') SH.slot = el.value;
   else if(el.dataset.act==='swap'){ curPlan()[dayIdx(S.date)][el.dataset.slot] = +el.value; saveSettings(); render(); }
   else if(el.dataset.act==='tick'){ if(el.checked) S.settings.checked[el.dataset.id]=true; else delete S.settings.checked[el.dataset.id]; saveSettings(); render(); }
@@ -431,6 +440,8 @@ async function loadAll(){
     if(s.goal && typeof s.goal.kg==='number' && s.goal.date) S.settings.goal = s.goal;
     if(s.cal && typeof s.cal==='object') S.settings.cal = s.cal;
     if(typeof s.aiCode==='string') S.settings.aiCode = s.aiCode;
+    if(typeof s.aiModel==='string' && CONFIG.models[s.aiModel]) S.settings.aiModel = s.aiModel;
+    if(s.usage && typeof s.usage==='object') S.settings.usage = s.usage;
     if(s.profile && typeof s.profile==='object') S.settings.profile = s.profile;
     if(typeof s.startWeek==='string') S.settings.startWeek = s.startWeek;
     if(s.rings && typeof s.rings==='object') S.settings.rings = s.rings;
@@ -443,7 +454,8 @@ async function loadAll(){
   if(b && Array.isArray(b.weights) && b.weights.length) S.body = {weights:b.weights, measures:Array.isArray(b.measures)?b.measures:[]};
   if(l && Array.isArray(l.items)) S.labs = l;
   if(w && w.ex) S.wlog = w;
-  if(c && Array.isArray(c.msgs)) S.chat = c;
+  if(c && Array.isArray(c.threads)) S.chat = {threads:c.threads, cur:null};
+  else if(c && Array.isArray(c.msgs) && c.msgs.length) S.chat = {threads:[{id:uid(), title:(c.msgs.find(m=>m.role==='user')||{content:'Conversazione precedente'}).content.slice(0,48), t:Date.now(), msgs:c.msgs}], cur:null};
   if(S.settings.profile) applyCfg(S.settings.profile);
   else if(S.legacy){ applyCfg({...newProfile(), powder:true, trainWhen:'mattina', trainTime:'09:00'}); if(!S.settings.startWeek) S.settings.startWeek = '2026-11-23'; }
   if(!S.settings.profile){ if(!S.ob) startOnboarding(false); } else if(S.ob && !S.ob.edit) S.ob = null;
