@@ -80,7 +80,7 @@ const POOLS = {
   ],
   pranzo:[
     {n:'Pollo, riso e olio', i:[['pollo',160],['riso',90],['olio',12]]},
-    {n:'Pasta al ragù di manzo e zucchine', i:[['pasta',80],['manzo',120],['passata',150],['zucchine',100],['olio',5],['parmigiano',10]]},
+    {n:'Pasta al ragù di manzo', i:[['pasta',80],['manzo',120],['passata',150],['olio',5],['parmigiano',10]]},
     {n:'Riso e tonno', i:[['riso',90],['tonno',120],['olio',15]]},
     {n:'Piadina con pollo e uovo', i:[['piadina',100],['pollo',120],['uova',60],['olio',8]]},
     {n:'Riso alla cantonese semplice', i:[['riso',90],['uova',120],['prosciutto',40],['soia',10],['olio',10]]},
@@ -195,7 +195,7 @@ const TIMES = {colazione:'08:15', spuntino:'10:30', pre:'08:40', post:'10:45', p
 const HINTS = {pranzo:'Mangia entro le 12:45, prima di partire', merenda:'Da portare con te, per scuola o auto'};
 const TRAIN_HINTS = {pre:"Mescola la dose in 400 ml d'acqua, circa 20-30 minuti prima della palestra", post:"La tua merenda dopo la palestra, entro un'ora dalla fine dell'allenamento"};
 // resa media da crudo a cotto (peso)
-const YIELD = {riso:2.5, pasta:2.2, pollo:0.75, tacchino:0.75, manzo:0.75, patate:0.85, zucchine:0.8};
+const YIELD = {riso:2.5, pasta:2.2, pollo:0.75, tacchino:0.75, manzo:0.75, patate:0.85};
 const COOK = new Set(Object.keys(YIELD));
 // piatti da fare al momento (non si preparano in anticipo)
 POOLS.pranzo[3].fresh = true; // piadina
@@ -242,7 +242,7 @@ const REC = {
  'post:3':[2,['Versa il latte sui cereali integrali.']],
  'post:4':[12,['Mescola albume, uovo e avena in un impasto liscio.','Cuoci in padella antiaderente, 2 minuti per lato.','Condisci con il miele.']],
  'pranzo:0':[25,['Cuoci il riso in acqua salata (circa 12-15 minuti) e scolalo.','Cuoci il petto di pollo in padella con poco olio, 5-6 minuti per lato, fino a doratura al centro.','Taglia il pollo, unisci al riso e condisci con l\'olio a crudo.']],
- 'pranzo:1':[30,['Rosola il macinato in padella con un filo d\'olio e le zucchine a pezzetti.','Aggiungi la passata e cuoci 10-12 minuti, con sale e pepe.','Cuoci la pasta al dente, scolala e condisci con il ragù e il parmigiano.']],
+ 'pranzo:1':[30,['Rosola il macinato in padella con un filo d\'olio.','Aggiungi la passata e cuoci 10-12 minuti, con sale e pepe.','Cuoci la pasta al dente, scolala e condisci con il ragù e il parmigiano.']],
  'pranzo:2':[20,['Cuoci il riso e scolalo.','Scola il tonno e uniscilo al riso.','Condisci con olio, limone e un pizzico di sale.']],
  'pranzo:3':[15,['Cuoci il pollo a fettine in padella, 3-4 minuti per lato.','Cuoci l\'uovo (sodo o all\'occhio di bue).','Scalda la piadina e farciscila con il pollo e l\'uovo.']],
  'pranzo:4':[20,['Cuoci il riso e lascialo raffreddare un po\'.','In padella rosola il prosciutto a dadini con un filo d\'olio, aggiungi le uova sbattute e mescola.','Unisci il riso, la salsa di soia e salta 2-3 minuti.']],
