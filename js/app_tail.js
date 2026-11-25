@@ -348,6 +348,22 @@ document.addEventListener('click', ev => {
     saveSettings(); closeSheet(); render();
   }
   else if(a==='exdel'){ const xid=el.dataset.id; S.settings.workout[+el.dataset.di] = exOf(+el.dataset.di).filter(e=>e.id!==xid); delete S.exImg[xid]; enqueue(()=>Store.set('ex-'+xid,{})); saveSettings(); render(); }
+  else if(a==='wday'){ S.wDay=+el.dataset.i; S.wOpen=null; render(); }
+  else if(a==='wopen'){ if(ev && ev.target.closest('.exth')) return; S.wOpen = S.wOpen===el.dataset.id ? '-' : el.dataset.id; render(); }
+  else if(a==='wstep'){ const inp=document.getElementById(el.dataset.t); if(inp){ const v=Math.max(0,(parseFloat(String(inp.value).replace(',','.'))||0)+parseFloat(el.dataset.d)); inp.value=Math.round(v*10)/10; } }
+  else if(a==='wset'){
+    const id=el.dataset.id, kg=num(val('wk'+id)), reps=parseInt(val('wr'+id),10);
+    if(!(kg>=0)||!(reps>0)) return toast('Inserisci peso e ripetizioni.');
+    const arr=(S.wlog.ex[id]=S.wlog.ex[id]||[]); arr.push({d:todayStr(),kg,reps}); if(arr.length>80) arr.splice(0,arr.length-80);
+    const di=pickWDay(), ex=exOf(di).find(x=>x.id===id);
+    if(ex && setsToday(id).length>=ex.sets){ const nx=exOf(di).find(x=>setsToday(x.id).length<x.sets); S.wOpen = nx?nx.id:'-'; S.rest=null; }
+    else if(ex) S.rest={end:Date.now()+restSecs(ex.rest)*1000};
+    saveDoc('wlog'); render();
+  }
+  else if(a==='wundo'){ const id=el.dataset.id, arr=S.wlog.ex[id]||[]; for(let i=arr.length-1;i>=0;i--) if(arr[i].d===todayStr()){ arr.splice(i,1); break; } saveDoc('wlog'); render(); }
+  else if(a==='restadd'){ if(S.rest){ S.rest.end+=15000; tickRest(); } }
+  else if(a==='restskip'){ S.rest=null; render(); }
+  else if(a==='mgmt'){ S.mgmt=!(S.mgmt||S.schedaPrev||S.schedaMsg); if(!S.mgmt){ S.schedaPrev=null; S.schedaMsg=''; } render(); }
   else if(a==='wlogopen') openSheet('wlog',{exDi:+el.dataset.di, exId:el.dataset.id});
   else if(a==='wlogsave'){
     const kg=num(val('wlkg')), reps=parseInt(val('wlr'),10);
