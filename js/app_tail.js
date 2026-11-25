@@ -333,6 +333,7 @@ document.addEventListener('click', ev => {
     Promise.all(jobs).catch(()=>{}).finally(()=>{ location.reload(); });
   }
   else if(a==='schpick'){ const f=$('schfile'); if(f) f.click(); }
+  else if(a==='schpaste'){ readSchedaText(val('schtext')); }
   else if(a==='schcancel'){ S.schedaPrev=null; S.schedaMsg=''; render(); }
   else if(a==='schgo') applyScheda();
   else if(a==='exview') openSheet('exview',{exDi:+el.dataset.di, exId:el.dataset.id});

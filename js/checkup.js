@@ -88,30 +88,37 @@ function viewCheck(){
 
 // ---- importazione di una scheda da file ----
 const SCH_TAG = 'scheda';
+function parseScheda(raw){
+  const j = JSON.parse(raw);
+  if(!j || j.app!=='piano-alimentare' || j.kind!==SCH_TAG || !Array.isArray(j.days) || !j.days.length || j.days.length>7) throw new Error('formato');
+  const cl = (s,n) => String(s==null?'':s).slice(0,n);
+  const days = j.days.map(d => {
+    if(!(d.weekday>=0 && d.weekday<=6) || !Array.isArray(d.exercises) || d.exercises.length>20) throw new Error('giorno');
+    return {weekday:d.weekday|0, name:cl(d.name,80), warm:cl(d.warm,240), cardio:cl(d.cardio,240), exercises:d.exercises.map(x => {
+      if(!x || !x.name) throw new Error('esercizio');
+      const img = typeof x.img==='string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(x.img) && x.img.length<300000 ? x.img : null;
+      return {name:cl(x.name,80), sets:Math.max(1,Math.min(20,x.sets|0||3)), reps:cl(x.reps||'10',24), rest:cl(x.rest,24), note:cl(x.note,300), inc:(x.inc>=0 && x.inc<=20) ? +x.inc : null, img};
+    })};
+  });
+  const sch = {days, guide:(Array.isArray(j.guide)?j.guide:[]).slice(0,8).map(s=>cl(s,300)), notesAppend:cl(j.notesAppend,400)};
+  return {sch, sum:{days:days.length, ex:days.reduce((a,d)=>a+d.exercises.length,0), img:days.reduce((a,d)=>a+d.exercises.filter(x=>x.img).length,0), note:!!sch.notesAppend, dayNames:days.map(d=>DAYS_LONG[d.weekday]).join(', ')}};
+}
+function readSchedaText(txt){
+  S.schedaPrev = null; S.schedaMsg = '';
+  try{
+    const t = String(txt||'').trim(); const i = t.indexOf('{'), j = t.lastIndexOf('}');
+    if(i<0 || j<i) throw new Error('vuoto');
+    S.schedaPrev = parseScheda(t.slice(i, j+1));
+  }catch(e){ S.schedaMsg = 'Non riconosco questa scheda. Copia tutto il testo, dalla prima parentesi graffa all\'ultima.'; }
+  render();
+}
 function readScheda(f){
   if(!f) return;
   S.schedaPrev = null; S.schedaMsg = '';
   if(f.size > 12*1024*1024){ S.schedaMsg = 'Il file è troppo grande per essere una scheda.'; render(); return; }
   const r = new FileReader();
   r.onerror = () => { S.schedaMsg = 'Non riesco a leggere il file.'; render(); };
-  r.onload = () => {
-    try{
-      const j = JSON.parse(r.result);
-      if(!j || j.app!=='piano-alimentare' || j.kind!==SCH_TAG || !Array.isArray(j.days) || !j.days.length || j.days.length>7) throw new Error('formato');
-      const cl = (s,n) => String(s==null?'':s).slice(0,n);
-      const days = j.days.map(d => {
-        if(!(d.weekday>=0 && d.weekday<=6) || !Array.isArray(d.exercises) || d.exercises.length>20) throw new Error('giorno');
-        return {weekday:d.weekday|0, name:cl(d.name,80), warm:cl(d.warm,240), cardio:cl(d.cardio,240), exercises:d.exercises.map(x => {
-          if(!x || !x.name) throw new Error('esercizio');
-          const img = typeof x.img==='string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(x.img) && x.img.length<300000 ? x.img : null;
-          return {name:cl(x.name,80), sets:Math.max(1,Math.min(20,x.sets|0||3)), reps:cl(x.reps||'10',24), rest:cl(x.rest,24), note:cl(x.note,300), inc:(x.inc>=0 && x.inc<=20) ? +x.inc : null, img};
-        })};
-      });
-      const sch = {days, guide:(Array.isArray(j.guide)?j.guide:[]).slice(0,8).map(s=>cl(s,300)), notesAppend:cl(j.notesAppend,400)};
-      S.schedaPrev = {sch, sum:{days:days.length, ex:days.reduce((a,d)=>a+d.exercises.length,0), img:days.reduce((a,d)=>a+d.exercises.filter(x=>x.img).length,0), note:!!sch.notesAppend, dayNames:days.map(d=>DAYS_LONG[d.weekday]).join(', ')}};
-    }catch(e){ S.schedaMsg = 'Questo file non è una scheda di Piano Alimentare. Scegli il file della scheda che ti ho mandato.'; }
-    render();
-  };
+  r.onload = () => readSchedaText(r.result);
   r.readAsText(f);
 }
 function applyScheda(){

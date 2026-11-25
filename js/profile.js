@@ -192,7 +192,7 @@ function viewOnboarding(){
     <div class="row" style="margin-top:16px">${ob.step>0?'<button class="btn" data-act="obback">Indietro</button>':ob.edit?'<button class="btn" data-act="obcancel">Annulla</button>':''}<span class="grow"></span><button class="btn pri" data-act="${last?'obfinish':'obnext'}">${last?(ob.edit?'Salva':'Crea il mio piano'):'Avanti'}</button></div></section>`;
   if(ob.step===0 && !ob.edit){
     h += `<section class="card"><h3>Hai già una copia di sicurezza?</h3><p class="small muted" style="margin:6px 0 10px">Se hai già usato l'app, ripristina i tuoi dati da un file.</p>
-      <button class="btn" data-act="bkpick">Ripristina da un file</button><input id="bkfile" type="file" accept=".json,application/json" hidden>
+      <button class="btn" data-act="bkpick">Ripristina da un file</button><input id="bkfile" type="file" hidden>
       ${S.restore?`<div class="note" style="margin:12px 0 0">Trovati ${S.restore.sum.giorni} giorni di diario, ${S.restore.sum.pesate} pesate. <div class="row" style="margin-top:8px"><button class="btn pri sm" data-act="bkgo">Ripristina</button><button class="btn sm" data-act="bkcancel">Annulla</button></div></div>`:''}
       ${S.bkMsg?`<p class="small" style="margin:10px 0 0">${esc(S.bkMsg)}</p>`:''}</section>`;
   }
