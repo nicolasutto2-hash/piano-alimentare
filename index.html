@@ -34,7 +34,12 @@
 <script src="js/views_bottom.js"></script>
 <script src="js/app_tail.js"></script>
 <script>
-if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+if('serviceWorker' in navigator){
+  var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+  // quando arriva una versione nuova, ricarica una volta sola per usarla subito
+  navigator.serviceWorker.addEventListener('controllerchange', function(){ if(hadController && !reloaded){ reloaded = true; location.reload(); } });
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').then(function(r){ try{ r.update(); }catch(e){} }).catch(function(){}); });
+}
 </script>
 </body>
 </html>
