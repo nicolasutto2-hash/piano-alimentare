@@ -7,10 +7,11 @@ function lastSession(exId){
   return {d, sets:arr.filter(x=>x.d===d)};
 }
 function progression(ex){
+  if(ex.inc===0) return null;
   const arr = S.wlog.ex[ex.id] || []; if(!arr.length) return null;
   const d = arr.reduce((m,x)=>x.d>m?x.d:m,''), sets = arr.filter(x=>x.d===d);
   const kgMax = Math.max(...sets.map(x=>x.kg)), top = Math.max(...(String(ex.reps).match(/\d+/g)||[10]).map(Number));
-  const atMax = sets.filter(x=>x.kg===kgMax), inc = kgMax>=20 ? 2.5 : 1;
+  const atMax = sets.filter(x=>x.kg===kgMax), inc = ex.inc>0 ? ex.inc : (kgMax>=20 ? 2.5 : 1);
   if(atMax.length>=ex.sets && atMax.every(x=>x.reps>=top)) return {up:true, kg:Math.round((kgMax+inc)*10)/10, text:'Hai chiuso tutte le serie: la prossima volta prova '+f1(kgMax+inc)+' kg.'};
   return {up:false, kg:kgMax, text:'Resta a '+f1(kgMax)+' kg finché fai '+top+' ripetizioni in tutte le '+ex.sets+' serie.'};
 }
@@ -22,23 +23,30 @@ function viewAllena(){
     <div class="chips" style="flex-wrap:wrap;overflow:visible">${DAYS.map((n,i)=>`<button class="chip ${isTrain(i)?'on':''}" data-act="traintoggle" data-i="${i}" aria-pressed="${isTrain(i)}">${n}</button>`).join('')}</div>
     ${train.length!==3?`<p class="small muted" style="margin:6px 0 0">Ne hai scelti ${train.length}. </p>`:''}
     ${CFG.powder?`<div style="margin-top:14px"><label for="prek">Calorie di una dose di pre workout (kcal)</label><input id="prek" type="number" inputmode="numeric" min="0" max="200" value="${S.settings.preKcal ?? 10}"><p class="small muted" style="margin:6px 0 0">Guarda l'etichetta del barattolo: spesso sono poche. Controlla anche la caffeina per dose.</p></div>`:''}</section>`;
+  if(S.schedaPrev){ const sp = S.schedaPrev; h += `<section class="card" style="border:2px solid var(--accent)"><h3>Scheda trovata</h3><p class="small" style="margin:6px 0 10px">${sp.sum.days} giorni, ${sp.sum.ex} esercizi, ${sp.sum.img} foto${sp.sum.note?'. Include una nota per l\'assistente sul tuo profilo':''}. Sostituisce gli esercizi di ${sp.sum.dayNames}. I carichi già registrati restano per gli esercizi con lo stesso nome.</p><div class="row"><button class="btn pri" data-act="schgo">Carica la scheda</button><button class="btn" data-act="schcancel">Annulla</button></div></section>`; }
   if(!train.length) h += `<div class="note">Seleziona almeno un giorno per creare la scheda.</div>`;
   for(const di of train){
     const exs = exOf(di);
-    h += `<section class="card"><div class="row between"><h2>${DAYS_LONG[di]}</h2>${di===td?'<span class="pill">Oggi</span>':''}</div>`;
+    const mt = (S.settings.workoutMeta||{})[di];
+    h += `<section class="card"><div class="row between"><div><h2>${DAYS_LONG[di]}</h2>${mt&&mt.name?`<div class="small muted">${esc(mt.name)}</div>`:''}</div>${di===td?'<span class="pill">Oggi</span>':''}</div>${mt&&(mt.warm||mt.cardio)?`<details style="margin-top:8px"><summary class="small">Riscaldamento e defaticamento</summary><div class="small muted" style="margin-top:6px">${mt.warm?'<b>Riscaldamento:</b> '+esc(mt.warm):''}${mt.warm&&mt.cardio?'<br>':''}${mt.cardio?'<b>Defaticamento:</b> '+esc(mt.cardio):''}</div></details>`:''}`;
     if(!exs.length) h += `<p class="muted" style="margin:10px 0">Nessun esercizio. Quando ti danno la scheda, aggiungi gli esercizi qui, oppure scrivili all'Assistente e li inserisce lui.</p>`;
     for(const e of exs){
       const ls = lastSession(e.id), tdy = setsToday(e.id), img = S.exImg[e.id], pr = progression(e);
       h += `<div class="entry" style="align-items:flex-start"><button class="exth" data-act="exview" data-id="${e.id}" data-di="${di}" aria-label="Foto e video di ${esc(e.name)}">${img?`<img src="${img}" alt="Foto di ${esc(e.name)}">`:ICON.cam}</button>
         <div class="grow"><div style="font-weight:600">${esc(e.name)}</div>
-        <div class="small muted num">${e.sets} × ${esc(e.reps)}${ls?' · Ultima volta: '+ls.sets.map(x=>x.kg+' kg × '+x.reps).join(', '):''}</div>
+        <div class="small muted num">${e.sets} × ${esc(e.reps)}${e.rest?' · rec. '+esc(e.rest):''}${ls?' · Ultima volta: '+ls.sets.map(x=>x.kg+' kg × '+x.reps).join(', '):''}</div>
         ${tdy.length?`<div class="small done num">Oggi: ${tdy.map(x=>x.kg+' kg × '+x.reps).join(', ')}</div>`:''}
         ${pr?`<div class="small ${pr.up?'done':'muted'}">${pr.text}</div>`:''}
+        ${e.note?`<details class="small" style="margin:2px 0"><summary class="small">Indicazioni</summary><div class="muted" style="margin-top:4px">${esc(e.note)}</div></details>`:''}
         <a class="small" style="color:var(--accent-ink);font-weight:600" href="${exVideoUrl(e.name)}" target="_blank" rel="noopener">Come si fa</a></div>
         <div class="stack" style="gap:6px;align-items:flex-end"><button class="btn sm pri" data-act="wlogopen" data-id="${e.id}" data-di="${di}">Registra</button><button class="x" style="border:0;background:transparent;color:var(--muted)" data-act="exdel" data-id="${e.id}" data-di="${di}" aria-label="Elimina ${esc(e.name)}">Elimina</button></div></div>`;
     }
     h += `<div style="margin-top:10px"><button class="btn sm" data-act="exadd" data-di="${di}">Aggiungi esercizio</button></div></section>`;
   }
+  const gd = S.settings.workoutGuide;
+  if(gd && gd.length) h += `<section class="card"><h3>Linee guida della scheda</h3><ul class="small muted" style="margin:8px 0 0;padding-left:18px;display:grid;gap:6px">${gd.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h += `<section class="card"><h3>Importa una scheda</h3><p class="small muted" style="margin:6px 0 10px">Da un file di scheda (con serie, ripetizioni, recuperi, indicazioni e foto). Gli esercizi con lo stesso nome tengono i carichi già registrati.</p><button class="btn" data-act="schpick">Scegli il file della scheda</button><input id="schfile" type="file" accept=".json,application/json" hidden>
+    ${S.schedaMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.schedaMsg)}</p>`:''}</section>`;
   h += `<p class="small muted">Chiedi all'Assistente per riempire una scheda in una frase, per esempio "Mercoledì: panca 4x8, squat 4x10, rematore 3x12".</p>`;
   return h;
 }

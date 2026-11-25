@@ -67,11 +67,11 @@ function chatTools(){
      execute: async ({date,training}) => { const d=validDate(date); await loadDay(d,true); if(training===isTrain(dayIdx(d))) delete S.days[d].train; else S.days[d].train=!!training; saveDay(d); touch(); return {date:d, allenamento:trainOn(d), obiettivo_kcal:targets(d).k}; }},
     {name:'set_training_days', description:'Imposta i giorni di allenamento (0=Lunedì … 6=Domenica).', inputSchema:obj({weekdays:{type:'array', items:{type:'integer'}}}, ['weekdays']),
      execute: ({weekdays}) => { const w=[...new Set((weekdays||[]).filter(i=>i>=0&&i<=6))]; S.settings.train=w; saveSettings(); touch(); return {giorni:w}; }},
-    {name:'set_workout', description:"Imposta la scheda di un giorno di allenamento, sostituendo gli esercizi. Aggiunge il giorno ai giorni di allenamento se manca.", inputSchema:obj({weekday:{type:'integer'}, exercises:{type:'array', items:obj({name:{type:'string'}, sets:{type:'integer'}, reps:{type:'string',description:'ripetizioni, es. 8 o 8-10'}}, ['name','sets','reps'])}}, ['weekday','exercises']),
+    {name:'set_workout', description:"Imposta la scheda di un giorno di allenamento, sostituendo gli esercizi. Aggiunge il giorno ai giorni di allenamento se manca.", inputSchema:obj({weekday:{type:'integer'}, exercises:{type:'array', items:obj({name:{type:'string'}, sets:{type:'integer'}, reps:{type:'string',description:'ripetizioni, es. 8 o 8-10'}, rest:{type:'string',description:'recupero, es. 90 sec'}, note:{type:'string',description:'indicazioni tecniche'}}, ['name','sets','reps'])}}, ['weekday','exercises']),
      execute: ({weekday,exercises}) => {
        if(!(weekday>=0&&weekday<=6)) throw new Error('giorno non valido');
        const old = exOf(weekday);
-       S.settings.workout[weekday] = (exercises||[]).slice(0,20).map(e=>({id:(old.find(o=>o.name.toLowerCase()===String(e.name).toLowerCase())||{}).id||uid(), name:String(e.name).slice(0,60), sets:Math.max(1,Math.min(20,Math.round(e.sets)||3)), reps:String(e.reps||'10').slice(0,12)}));
+       S.settings.workout[weekday] = (exercises||[]).slice(0,20).map(e=>({id:(old.find(o=>o.name.toLowerCase()===String(e.name).toLowerCase())||{}).id||uid(), name:String(e.name).slice(0,60), sets:Math.max(1,Math.min(20,Math.round(e.sets)||3)), reps:String(e.reps||'10').slice(0,12), ...(e.rest?{rest:String(e.rest).slice(0,24)}:{}), ...(e.note?{note:String(e.note).slice(0,300)}:{}), ...((old.find(o=>o.name.toLowerCase()===String(e.name).toLowerCase())||{}).inc!=null?{inc:old.find(o=>o.name.toLowerCase()===String(e.name).toLowerCase()).inc}:{})}));
        if(!S.settings.train.includes(weekday)) S.settings.train.push(weekday);
        saveSettings(); touch(); return {giorno:DAYS_LONG[weekday], esercizi:S.settings.workout[weekday].length};
      }},

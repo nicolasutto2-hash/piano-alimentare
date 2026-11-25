@@ -27,6 +27,7 @@ function sheetBody(){
     const ex = exOf(SH.exDi).find(e=>e.id===SH.exId); if(!ex) return '';
     const img = S.exImg[ex.id];
     return `<div class="row between"><h2>${esc(ex.name)}</h2><button class="btn sm" data-act="closeadd">Chiudi</button></div>
+      ${ex.note?`<p class="small" style="margin:10px 0 0">${esc(ex.note)}</p>`:''}
       ${img?`<img src="${img}" alt="Foto di ${esc(ex.name)}" style="width:100%;border-radius:20px;margin:14px 0;display:block">`:`<p class="muted" style="margin:12px 0">Nessuna foto. Scatta o scegli una foto del macchinario in palestra: ti aiuta a riconoscerlo la volta dopo.</p>`}
       <div class="stack"><button class="btn pri" data-act="expick">${img?'Cambia foto':'Aggiungi foto'}</button><input id="exfile" type="file" accept="image/*" hidden>
       ${img?`<button class="btn" data-act="exrm">Rimuovi foto</button>`:''}
@@ -324,6 +325,9 @@ document.addEventListener('click', ev => {
     const i=+el.dataset.i, t=S.settings.train; S.settings.train = t.includes(i) ? t.filter(x=>x!==i) : [...t,i];
     saveSettings(); render();
   }
+  else if(a==='schpick'){ const f=$('schfile'); if(f) f.click(); }
+  else if(a==='schcancel'){ S.schedaPrev=null; S.schedaMsg=''; render(); }
+  else if(a==='schgo') applyScheda();
   else if(a==='exview') openSheet('exview',{exDi:+el.dataset.di, exId:el.dataset.id});
   else if(a==='expick'){ const f=$('exfile'); if(f) f.click(); }
   else if(a==='exrm'){ const id=SH.exId; S.exImg[id]=null; enqueue(()=>Store.set('ex-'+id,{})); paintSheet(); render(); }
@@ -407,6 +411,7 @@ document.addEventListener('change', ev => {
   if(el.dataset && el.dataset.obchk && S.ob){ const k=el.dataset.obchk; if(k.startsWith('excl.')){ S.ob.draft.excl[k.slice(5)] = el.checked; } else S.ob.draft[k] = el.checked; if(S.ob.step===2 || k==='powder') render(); return; }
   if(el.id==='bkfile'){ const f = el.files && el.files[0]; el.value=''; readBackupFile(f); }
   else if(el.dataset.calkey){ if(el.checked) delete S.calOff[el.dataset.calkey]; else S.calOff[el.dataset.calkey]=true; }
+  else if(el.id==='schfile'){ const f = el.files && el.files[0]; el.value=''; readScheda(f); }
   else if(el.id==='exfile'){
     const f = el.files && el.files[0], id = SH.exId; if(!f) return;
     makeThumb(f).then(url=>{ S.exImg[id]=url; enqueue(()=>Store.set('ex-'+id,{img:url})); paintSheet(); render(); })
@@ -466,6 +471,8 @@ async function loadAll(){
     if(typeof s.fTarget==='number') S.settings.fTarget = s.fTarget;
     S.legacy = !s.profile && !!(s.plans || s.plan);
     if(s.workout && typeof s.workout==='object') S.settings.workout = s.workout;
+    if(s.workoutMeta && typeof s.workoutMeta==='object') S.settings.workoutMeta = s.workoutMeta;
+    if(Array.isArray(s.workoutGuide)) S.settings.workoutGuide = s.workoutGuide;
   }
   if(b && Array.isArray(b.weights) && (b.weights.length || (Array.isArray(b.checkups)&&b.checkups.length))) S.body = {weights:b.weights, measures:Array.isArray(b.measures)?b.measures:[], checkups:Array.isArray(b.checkups)?b.checkups:[]};
   if(l && Array.isArray(l.items)) S.labs = l;
