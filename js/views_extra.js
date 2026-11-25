@@ -17,13 +17,20 @@ function progression(ex){
 }
 const setsToday = exId => (S.wlog.ex[exId]||[]).filter(x=>x.d===todayStr());
 const exVideoUrl = n => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(n + ' esecuzione corretta');
+function schedaCard(){
+  let h = '';
+  if(S.schedaPrev){ const sp = S.schedaPrev; h += `<section class="card" style="border:2px solid var(--accent)"><h3>Scheda trovata</h3><p class="small" style="margin:6px 0 10px">${sp.sum.days} giorni, ${sp.sum.ex} esercizi, ${sp.sum.img} foto${sp.sum.note?'. Include una nota per l\'assistente sul tuo profilo':''}. Sostituisce gli esercizi di ${sp.sum.dayNames}. I carichi già registrati restano per gli esercizi con lo stesso nome.</p><div class="row"><button class="btn pri" data-act="schgo">Carica la scheda</button><button class="btn" data-act="schcancel">Annulla</button></div></section>`; }
+  h += `<section class="card"><h3>Importa una scheda</h3><p class="small muted" style="margin:6px 0 10px">Da un file di scheda (con serie, ripetizioni, recuperi, indicazioni e foto). Gli esercizi con lo stesso nome tengono i carichi già registrati.</p><button class="btn pri" data-act="schbuilt">Carica la mia scheda</button> <button class="btn" data-act="schpick">Scegli il file della scheda</button><input id="schfile" type="file" hidden>
+    <details style="margin-top:12px"><summary class="small">Oppure incolla il testo della scheda</summary><div class="stack" style="margin-top:8px"><textarea id="schtext" rows="4" placeholder="{ &quot;app&quot;: &quot;piano-alimentare&quot;, &quot;kind&quot;: &quot;scheda&quot; … }" style="font:inherit;color:var(--fg);background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:10px 12px;width:100%"></textarea><button class="btn" data-act="schpaste">Importa il testo</button></div></details>
+    ${S.schedaMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.schedaMsg)}</p>`:''}</section>`;
+  return h;
+}
 function viewAllenaMgmt(){
   const td = dayIdx(todayStr()), train = [...S.settings.train].sort((a,b)=>a-b);
   let h = `<section class="card"><h2>I tuoi giorni di ${sportLabel()}</h2><p class="small muted" style="margin:6px 0 12px">In questi giorni il menù si adatta all'allenamento e l'obiettivo sale di ${trainBonus()} kcal. Se un giorno cambia, lo modifichi dal Menù con "Oggi non mi alleno" o "Oggi mi alleno". Orari e sport si cambiano da Il mio profilo.</p>
     <div class="chips" style="flex-wrap:wrap;overflow:visible">${DAYS.map((n,i)=>`<button class="chip ${isTrain(i)?'on':''}" data-act="traintoggle" data-i="${i}" aria-pressed="${isTrain(i)}">${n}</button>`).join('')}</div>
     ${train.length!==3?`<p class="small muted" style="margin:6px 0 0">Ne hai scelti ${train.length}. </p>`:''}
     ${CFG.powder?`<div style="margin-top:14px"><label for="prek">Calorie di una dose di pre workout (kcal)</label><input id="prek" type="number" inputmode="numeric" min="0" max="200" value="${S.settings.preKcal ?? 10}"><p class="small muted" style="margin:6px 0 0">Guarda l'etichetta del barattolo: spesso sono poche. Controlla anche la caffeina per dose.</p></div>`:''}</section>`;
-  if(S.schedaPrev){ const sp = S.schedaPrev; h += `<section class="card" style="border:2px solid var(--accent)"><h3>Scheda trovata</h3><p class="small" style="margin:6px 0 10px">${sp.sum.days} giorni, ${sp.sum.ex} esercizi, ${sp.sum.img} foto${sp.sum.note?'. Include una nota per l\'assistente sul tuo profilo':''}. Sostituisce gli esercizi di ${sp.sum.dayNames}. I carichi già registrati restano per gli esercizi con lo stesso nome.</p><div class="row"><button class="btn pri" data-act="schgo">Carica la scheda</button><button class="btn" data-act="schcancel">Annulla</button></div></section>`; }
   if(!train.length) h += `<div class="note">Seleziona almeno un giorno per creare la scheda.</div>`;
   for(const di of train){
     const exs = exOf(di);
@@ -45,9 +52,6 @@ function viewAllenaMgmt(){
   }
   const gd = S.settings.workoutGuide;
   if(gd && gd.length) h += `<section class="card"><h3>Linee guida della scheda</h3><ul class="small muted" style="margin:8px 0 0;padding-left:18px;display:grid;gap:6px">${gd.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
-  h += `<section class="card"><h3>Importa una scheda</h3><p class="small muted" style="margin:6px 0 10px">Da un file di scheda (con serie, ripetizioni, recuperi, indicazioni e foto). Gli esercizi con lo stesso nome tengono i carichi già registrati.</p><button class="btn pri" data-act="schbuilt">Carica la mia scheda</button> <button class="btn" data-act="schpick">Scegli il file della scheda</button><input id="schfile" type="file" hidden>
-    <details style="margin-top:12px"><summary class="small">Oppure incolla il testo della scheda</summary><div class="stack" style="margin-top:8px"><textarea id="schtext" rows="4" placeholder="{ &quot;app&quot;: &quot;piano-alimentare&quot;, &quot;kind&quot;: &quot;scheda&quot; … }" style="font:inherit;color:var(--fg);background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:10px 12px;width:100%"></textarea><button class="btn" data-act="schpaste">Importa il testo</button></div></details>
-    ${S.schedaMsg?`<p class="small" style="margin:10px 0 0;color:var(--warn)">${esc(S.schedaMsg)}</p>`:''}</section>`;
   h += `<p class="small muted">Chiedi all'Assistente per riempire una scheda in una frase, per esempio "Mercoledì: panca 4x8, squat 4x10, rematore 3x12".</p>`;
   return h;
 }
@@ -55,6 +59,20 @@ function viewAllenaMgmt(){
 // ---- allenamento: modalità palestra ----
 const restSecs = r => { const s=String(r||''); const m=s.match(/\d+/g); if(!m) return 90; let n=+m[m.length-1]; if(/min|'|m\b/i.test(s) && !/sec|s\b|"/i.test(s) && n<10) n*=60; if(/\d['’]\s*\d/.test(s)) n=(+m[0])*60+(+m[1]); return Math.max(15,Math.min(600,n)); };
 const topReps = ex => Math.max(...(String(ex.reps).match(/\d+/g)||[10]).map(Number));
+const fmtClock = ms => { const s=Math.max(0,Math.floor(ms/1000)), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60, p=n=>String(n).padStart(2,'0'); return (h?h+':':'')+p(m)+':'+p(x); };
+const swMs = () => S.sw ? S.sw.base + (S.sw.run ? Date.now()-S.sw.t0 : 0) : 0;
+const SESS_KEY = 'piano:sess';
+function loadSess(){ if(S.sess===undefined){ try{ S.sess = JSON.parse(localStorage.getItem(SESS_KEY)||'null'); }catch(e){ S.sess=null; } } return S.sess; }
+function saveSess(){ try{ S.sess ? localStorage.setItem(SESS_KEY, JSON.stringify(S.sess)) : localStorage.removeItem(SESS_KEY); }catch(e){} }
+function clocksCard(){
+  const ss = loadSess(), sw = S.sw || {base:0,run:false};
+  const last = ((S.wlog.sess||[]).slice(-1)[0]);
+  return `<section class="card"><div class="row between"><div><div class="small muted">Sessione</div><div class="wk-time num" id="sesstime">${ss?fmtClock(Date.now()-ss.start):'00:00'}</div></div>
+    ${ss?`<button class="btn" data-act="sessend">Termina</button>`:`<button class="btn pri" data-act="sessstart">Inizia l'allenamento</button>`}</div>
+    ${!ss&&last?`<div class="small muted" style="margin-top:6px">Ultima sessione: ${last.min} min (${shortDate(last.d)})</div>`:''}
+    <div class="row between" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><div><div class="small muted">Cronometro</div><div class="wk-time num" id="swtime">${fmtClock(swMs())}</div></div>
+    <div class="row" style="gap:6px"><button class="btn sm ${sw.run?'':'pri'}" data-act="swtoggle">${sw.run?'Pausa':(sw.base?'Riprendi':'Avvia')}</button>${(sw.base||sw.run)?`<button class="btn sm" data-act="swreset">Azzera</button>`:''}</div></div></section>`;
+}
 function pickWDay(){
   const tr = [...S.settings.train].sort((a,b)=>a-b); if(!tr.length) return null;
   if(S.wDay!=null && tr.includes(S.wDay)) return S.wDay;
@@ -69,7 +87,7 @@ function viewAllena(){
     const done = exs.map(e=>Math.min(e.sets, setsToday(e.id).length)), tot = exs.reduce((a,e)=>a+e.sets,0), dn = done.reduce((a,b)=>a+b,0);
     const pct = tot ? Math.round(dn/tot*100) : 0;
     const cur = exs.findIndex((e,i)=>done[i]<e.sets), openId = S.wOpen && exs.some(e=>e.id===S.wOpen) ? S.wOpen : (cur>=0 ? exs[cur].id : null);
-    h += `<div class="chips" style="margin-bottom:10px">${tr.map(d=>`<button class="chip ${d===di?'on':''}" data-act="wday" data-i="${d}">${DAYS[d]}${d===dayIdx(todayStr())?' · oggi':''}</button>`).join('')}</div>
+    h += clocksCard() + `<div class="chips" style="margin:10px 0">${tr.map(d=>`<button class="chip ${d===di?'on':''}" data-act="wday" data-i="${d}">${DAYS[d]}${d===dayIdx(todayStr())?' · oggi':''}</button>`).join('')}</div>
       <section class="card wk-head"><div class="row between"><div><h2>${esc(mt.name||DAYS_LONG[di])}</h2><div class="small muted">${DAYS_LONG[di]} · ${exs.length} esercizi</div></div><div class="wk-pct num">${pct}%</div></div>
       <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div><div class="small muted num" style="margin-top:6px">${dn} di ${tot} serie</div>
       ${mt.warm?`<details style="margin-top:8px"><summary class="small">Riscaldamento e defaticamento</summary><div class="small muted" style="margin-top:6px"><b>Riscaldamento:</b> ${esc(mt.warm)}${mt.cardio?`<br><b>Defaticamento:</b> ${esc(mt.cardio)}`:''}</div></details>`:''}</section>`;
@@ -96,8 +114,8 @@ function viewAllena(){
     if(exs.length && dn>=tot) h += `<section class="card" style="border:2px solid var(--accent)"><h3>Allenamento completato</h3><p class="small muted" style="margin:6px 0 0">Ottimo lavoro. Bevi, mangia il pasto post workout e fai un po' di stretching leggero.</p></section>`;
   }
   const rest = S.rest ? `<div class="wk-rest" role="timer"><div><div class="small">Recupero</div><div id="resttime" class="num wk-time">${Math.max(0,Math.ceil((S.rest.end-Date.now())/1000))}s</div></div><div class="row" style="gap:6px"><button class="btn sm" data-act="restadd">+15 s</button><button class="btn sm pri" data-act="restskip">Salta</button></div></div>` : '';
-  h += `<div style="margin:6px 0 10px"><button class="btn" data-act="mgmt" aria-expanded="${!!(S.mgmt||S.schedaPrev||S.schedaMsg)}">${(S.mgmt||S.schedaPrev||S.schedaMsg)?'Chiudi la gestione della scheda':'Gestisci la scheda'}</button></div>`;
-  if(S.mgmt||S.schedaPrev||S.schedaMsg) h += viewAllenaMgmt();
+  h += `<div style="margin:6px 0 10px"><button class="btn" data-act="mgmt" aria-expanded="${!!S.mgmt}">${S.mgmt?'Chiudi la gestione della scheda':'Gestisci la scheda'}</button></div>`;
+  if(S.mgmt) h += viewAllenaMgmt();
   return h + rest;
 }
 function tickRest(){
@@ -106,7 +124,12 @@ function tickRest(){
   if(left<=0){ S.rest=null; try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){} if(S.page==='allena') render(); return; }
   if(el) el.textContent = left+'s';
 }
-setInterval(tickRest, 500);
+function tickClocks(){
+  const a=document.getElementById('sesstime'), b=document.getElementById('swtime');
+  if(a && S.sess) a.textContent = fmtClock(Date.now()-S.sess.start);
+  if(b) b.textContent = fmtClock(swMs());
+}
+setInterval(()=>{ tickRest(); tickClocks(); }, 500);
 
 // ---- peso e misure ----
 const num = v => { const x = parseFloat(String(v).replace(',','.')); return isFinite(x) ? x : NaN; };

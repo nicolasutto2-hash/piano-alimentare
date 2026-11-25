@@ -348,6 +348,10 @@ document.addEventListener('click', ev => {
     saveSettings(); closeSheet(); render();
   }
   else if(a==='exdel'){ const xid=el.dataset.id; S.settings.workout[+el.dataset.di] = exOf(+el.dataset.di).filter(e=>e.id!==xid); delete S.exImg[xid]; enqueue(()=>Store.set('ex-'+xid,{})); saveSettings(); render(); }
+  else if(a==='sessstart'){ S.sess={start:Date.now(), di:pickWDay()}; saveSess(); render(); }
+  else if(a==='sessend'){ const ss=loadSess(); if(ss){ const min=Math.max(1,Math.round((Date.now()-ss.start)/60000)); (S.wlog.sess=S.wlog.sess||[]).push({d:todayStr(),min,di:ss.di}); if(S.wlog.sess.length>60) S.wlog.sess.shift(); saveDoc('wlog'); toast('Allenamento di '+min+' min salvato'); } S.sess=null; saveSess(); render(); }
+  else if(a==='swtoggle'){ const w=S.sw||(S.sw={base:0,run:false,t0:0}); if(w.run){ w.base+=Date.now()-w.t0; w.run=false; } else { w.t0=Date.now(); w.run=true; } render(); }
+  else if(a==='swreset'){ S.sw=null; render(); }
   else if(a==='wday'){ S.wDay=+el.dataset.i; S.wOpen=null; render(); }
   else if(a==='wopen'){ if(ev && ev.target.closest('.exth')) return; S.wOpen = S.wOpen===el.dataset.id ? '-' : el.dataset.id; render(); }
   else if(a==='wstep'){ const inp=document.getElementById(el.dataset.t); if(inp){ const v=Math.max(0,(parseFloat(String(inp.value).replace(',','.'))||0)+parseFloat(el.dataset.d)); inp.value=Math.round(v*10)/10; } }
@@ -363,7 +367,7 @@ document.addEventListener('click', ev => {
   else if(a==='wundo'){ const id=el.dataset.id, arr=S.wlog.ex[id]||[]; for(let i=arr.length-1;i>=0;i--) if(arr[i].d===todayStr()){ arr.splice(i,1); break; } saveDoc('wlog'); render(); }
   else if(a==='restadd'){ if(S.rest){ S.rest.end+=15000; tickRest(); } }
   else if(a==='restskip'){ S.rest=null; render(); }
-  else if(a==='mgmt'){ S.mgmt=!(S.mgmt||S.schedaPrev||S.schedaMsg); if(!S.mgmt){ S.schedaPrev=null; S.schedaMsg=''; } render(); }
+  else if(a==='mgmt'){ S.mgmt=!S.mgmt; render(); }
   else if(a==='wlogopen') openSheet('wlog',{exDi:+el.dataset.di, exId:el.dataset.id});
   else if(a==='wlogsave'){
     const kg=num(val('wlkg')), reps=parseInt(val('wlr'),10);
