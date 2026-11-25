@@ -72,6 +72,16 @@ function viewCheck(){
     [['comp','Composizione corporea'],['mov','Forza e mobilità']].map(([grp,title])=>`<details style="margin-top:10px"><summary>${title}</summary><div class="grid2" style="margin-top:8px">${CK_FIELDS.filter(f=>f[3]===grp).map(f=>`<div><label for="ck-${f[0]}">${esc(f[1])}${f[2]?' ('+f[2]+')':''}</label><input id="ck-${f[0]}" data-ck="${f[0]}" type="text" inputmode="decimal"></div>`).join('')}</div></details>`).join('')+
     `<div style="margin-top:12px"><button class="btn pri" data-act="cksave">Salva il check-up</button></div>
     <details style="margin-top:12px"><summary>Incolla una riga di dati</summary><div class="stack" style="margin-top:8px"><textarea id="cktext" rows="3" placeholder="PIANO-CHECKUP;data=…;peso=…" style="font:inherit;color:var(--fg);background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:10px 12px;width:100%"></textarea><button class="btn" data-act="ckpaste">Importa la riga</button></div></details></section>`;
+  const p0 = S.settings.profile, withBmr = [...list].reverse().find(x=>x.bmr>0);
+  if(withBmr && p0){
+    const np = {...p0, weight: withBmr.peso>=30 ? withBmr.peso : p0.weight, bmrOverride: withBmr.bmr}, c = calcPlan(np), cur = {t:S.settings.target, b:trainBonus(), p:pTarget(), f:fTarget()};
+    const applied = +p0.bmrOverride===withBmr.bmr && p0.bmrDate===withBmr.d;
+    h = h.replace('<section class="card"><h3>Nuovo check-up</h3>', `<section class="card"><h3>Calorie dal check-up</h3><p class="small muted" style="margin:6px 0 10px">Il metabolismo basale misurato (${fmt(withBmr.bmr)} kcal, ${shortDate(withBmr.d)}) è più preciso della stima dal profilo (${fmt(c.bmrStd)} kcal).</p>
+      <div class="kv"><span>Obiettivo giorni normali</span><b class="num">${fmt(cur.t)} → ${fmt(c.target)} kcal</b></div><div class="kv"><span>Giorni di allenamento</span><b class="num">+${cur.b} → +${c.trainBonus} kcal</b></div>
+      <div class="kv"><span>Proteine · grassi</span><b class="num">${cur.p} → ${c.p} g · ${cur.f} → ${c.f} g</b></div>
+      ${c.note?`<p class="small" style="margin:8px 0 0">${esc(c.note)}</p>`:''}
+      ${applied?'<p class="small done" style="margin:10px 0 0">Già applicato.</p>':'<div style="margin-top:12px"><button class="btn pri" data-act="ckplan">Ricalcola le mie calorie</button></div>'}</section><section class="card"><h3>Nuovo check-up</h3>`);
+  }
   if(list.length) h += `<section class="card"><h3>Storico</h3>`+[...list].reverse().map(x=>`<div class="entry"><div class="grow num">${shortDate(x.d)} ${parse(x.d).getFullYear()}<div class="small muted">${CK_FIELDS.filter(f=>x[f[0]]!=null).length} valori${x.peso!=null?' · '+f1(x.peso)+' kg':''}${x.grassoPct!=null?' · grasso '+f1(x.grassoPct)+'%':''}</div></div><button class="x" data-act="ckdel" data-id="${x.id}" aria-label="Elimina il check-up del ${shortDate(x.d)}">Elimina</button></div>`).join('')+`</section>`;
   return h+`<p class="small muted">Valori dello strumento della palestra, indicativi: non sono una valutazione medica.</p>`;
 }

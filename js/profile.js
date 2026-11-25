@@ -17,7 +17,7 @@ function newProfile(){
 }
 function calcPlan(p){
   const w = +p.weight, h = +p.height, a = +p.age;
-  const bmr = 10*w + 6.25*h - 5*a + (p.sex==='F' ? -161 : 5), tdee = bmr*(ACT[p.activity]||ACT.sed).f;
+  const bmrStd = 10*w + 6.25*h - 5*a + (p.sex==='F' ? -161 : 5), measured = +p.bmrOverride > 0, bmr = measured ? +p.bmrOverride : bmrStd, tdee = bmr*(ACT[p.activity]||ACT.sed).f;
   const bmi = w/Math.pow(h/100,2), minor = a<18;
   let goal = p.goal, note = '';
   if(goal==='lose' && minor){ goal = 'maintain'; note = 'Sotto i 18 anni non propongo un piano per dimagrire: questo piano mantiene il peso, e per un obiettivo diverso conviene parlarne con un medico.'; }
@@ -30,7 +30,7 @@ function calcPlan(p){
   base = Math.round(base/50)*50;
   const sp = SPORTS[p.sport] || SPORTS.altro;
   const bonus = clampN(Math.round(((sp.met-1)*w*((+p.trainMin||60)/60)*0.6)/50)*50, 100, 500);
-  return {bmr:Math.round(bmr), tdee:Math.round(tdee), target:base, trainBonus:bonus, p:Math.round(w*((p.trainDays||[]).length>=2?1.8:1.5)), f:Math.round(w*0.9), note, goalUsed:goal, bmi:Math.round(bmi*10)/10};
+  return {bmr:Math.round(bmr), bmrStd:Math.round(bmrStd), measured, tdee:Math.round(tdee), target:base, trainBonus:bonus, p:Math.round(w*((p.trainDays||[]).length>=2?1.8:1.5)), f:Math.round(w*0.9), note, goalUsed:goal, bmi:Math.round(bmi*10)/10};
 }
 function applyCfg(p){
   const ex = p.excl || {};
@@ -180,7 +180,7 @@ function obStepHTML(){
   return `<div class="stack"><div class="hero" style="display:block"><div class="tag">Il tuo punto di partenza</div><div class="big num" style="margin-top:6px">${fmt(c.target)}<span class="of" style="font-size:1rem"> kcal al giorno</span></div>
     <div class="small muted" style="margin-top:8px">+${c.trainBonus} kcal nei giorni di allenamento · proteine ${c.p} g · grassi ${c.f} g</div></div>
     ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
-    <div class="card" style="box-shadow:none;background:var(--surface2)"><p class="small" style="margin:0">Il metabolismo basale stimato è circa ${fmt(c.bmr)} kcal. Con la tua giornata il consumo è circa ${fmt(c.tdee)} kcal${c.goalUsed==='lose'?', e tolgo un deficit moderato':c.goalUsed==='gain'?', e aggiungo un piccolo surplus':''}. È una stima: dopo qualche settimana di pesate l'app ti aiuta a correggerla.</p></div>
+    <div class="card" style="box-shadow:none;background:var(--surface2)"><p class="small" style="margin:0">${c.measured?'Uso il metabolismo basale misurato nel check-up':'Il metabolismo basale stimato è circa'} ${fmt(c.bmr)} kcal. Con la tua giornata il consumo è circa ${fmt(c.tdee)} kcal${c.goalUsed==='lose'?', e tolgo un deficit moderato':c.goalUsed==='gain'?', e aggiungo un piccolo surplus':''}. È una stima: dopo qualche settimana di pesate l'app ti aiuta a correggerla.</p></div>
     <p class="small muted" style="margin:0">Questa app è un supporto organizzativo ed educativo e non sostituisce una visita da un professionista sanitario.</p></div>`;
 }
 function viewOnboarding(){

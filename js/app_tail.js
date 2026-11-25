@@ -308,6 +308,13 @@ document.addEventListener('click', ev => {
     saveCheckup(val('ck-date') || todayStr(), v); render(); toast('Check-up salvato');
   }
   else if(a==='ckpaste'){ try{ const r = importCheckup(val('cktext')); render(); toast('Check-up importato ('+r.n+' valori)'); }catch(e){ toast(e.message); } }
+  else if(a==='ckplan'){
+    const p = S.settings.profile, last = [...sortedCk()].reverse().find(x=>x.bmr>0); if(!p || !last) return;
+    p.weight = last.peso>=30 ? last.peso : p.weight; p.bmrOverride = last.bmr; p.bmrDate = last.d;
+    const c = calcPlan(p);
+    S.settings.target = c.target; S.settings.trainBonus = c.trainBonus; S.settings.pTarget = c.p; S.settings.fTarget = c.f; S.settings.adjAt = todayStr();
+    saveSettings(); render(); toast('Calorie aggiornate: '+fmt(c.target)+' kcal');
+  }
   else if(a==='ckdel'){ S.body.checkups = (S.body.checkups||[]).filter(x=>x.id!==el.dataset.id); saveDoc('body'); render(); }
   else if(a==='resetchecks'){ const p=el.dataset.ws+':'; for(const k of Object.keys(S.settings.checked)) if(k.startsWith(p)) delete S.settings.checked[k]; saveSettings(); render(); }
   else if(a==='spesaweek'){ S.spesaWeek=+el.dataset.n; render(); }
