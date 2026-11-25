@@ -141,5 +141,5 @@ function applyScheda(){
   const p = S.settings.profile;
   if(p && sch.notesAppend && !String(p.notes||'').includes(sch.notesAppend.slice(0,30))) p.notes = (String(p.notes||'').trim() ? String(p.notes).trim()+' ' : '') + sch.notesAppend;
   S.schedaPrev = null; S.schedaMsg = '';
-  saveSettings(); render(); window.scrollTo(0,0); toast('Scheda caricata');
+  saveSettings(); render(); window.scrollTo(0,0);
 }
