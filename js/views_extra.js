@@ -131,6 +131,9 @@ function tickRest(){
 function tickClocks(){
   const a=document.getElementById('sesstime'), b=document.getElementById('swtime');
   if(a && S.sess) a.textContent = fmtClock(Date.now()-S.sess.start);
+  let pl = document.getElementById('sesspill'); const ss = loadSess();
+  if(!pl){ pl = document.createElement('button'); pl.id='sesspill'; pl.className='sesspill num'; pl.setAttribute('data-act','go'); pl.setAttribute('data-p','allena'); pl.setAttribute('aria-label','Sessione in corso, apri Allenamento'); document.body.appendChild(pl); }
+  pl.hidden = !ss; if(ss){ pl.textContent = '● Sessione '+fmtClock(Date.now()-ss.start); pl.style.bottom = S.rest ? 'calc(130px + env(safe-area-inset-bottom,0px))' : 'calc(16px + env(safe-area-inset-bottom,0px))'; }
   if(b) b.textContent = fmtClock(swMs());
 }
 setInterval(()=>{ tickRest(); tickClocks(); }, 500);
