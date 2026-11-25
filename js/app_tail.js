@@ -325,6 +325,13 @@ document.addEventListener('click', ev => {
     const i=+el.dataset.i, t=S.settings.train; S.settings.train = t.includes(i) ? t.filter(x=>x!==i) : [...t,i];
     saveSettings(); render();
   }
+  else if(a==='appupdate'){
+    toast('Aggiorno…');
+    const jobs = [];
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))));
+    if(window.caches && caches.keys) jobs.push(caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))));
+    Promise.all(jobs).catch(()=>{}).finally(()=>{ location.reload(); });
+  }
   else if(a==='schpick'){ const f=$('schfile'); if(f) f.click(); }
   else if(a==='schcancel'){ S.schedaPrev=null; S.schedaMsg=''; render(); }
   else if(a==='schgo') applyScheda();
