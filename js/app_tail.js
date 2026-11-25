@@ -333,6 +333,7 @@ document.addEventListener('click', ev => {
     Promise.all(jobs).catch(()=>{}).finally(()=>{ location.reload(); });
   }
   else if(a==='schpick'){ const f=$('schfile'); if(f) f.click(); }
+  else if(a==='schbuilt'){ fetch('scheda.json',{cache:'no-cache'}).then(r=>r.text()).then(x=>{ readSchedaText(x); if(S.schedaPrev) applyScheda(); }).catch(()=>{ S.schedaMsg='Non riesco a caricare la scheda. Controlla la connessione.'; render(); }); }
   else if(a==='schpaste'){ readSchedaText(val('schtext')); }
   else if(a==='schcancel'){ S.schedaPrev=null; S.schedaMsg=''; render(); }
   else if(a==='schgo') applyScheda();

@@ -1,5 +1,5 @@
 // Service worker: prima la rete (così gli aggiornamenti arrivano subito), poi la copia salvata (per usare l'app senza internet).
-const CACHE = 'piano-v6';
+const CACHE = 'piano-v7';
 const CORE = ['./', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/config.js','js/data.js','js/core.js','js/platform.js','js/profile.js','js/health.js','js/checkup.js','js/views_top.js','js/views_keep.js','js/views_extra.js','js/views_more.js','js/assist.js','js/views_bottom.js','js/app_tail.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => fetch(new Request(u, {cache:'reload'})).then(r => r.ok ? c.put(u, r) : null).catch(()=>null)))).then(() => self.skipWaiting())); });
