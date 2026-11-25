@@ -46,7 +46,7 @@ function withPlanWeek(w, fn){ const old = S.planWeek; S.planWeek = w; try{ retur
 const S = {
   page:'menu', planWeek:0, spesaWeek:null, nav:false, date:todayStr(), ready:false, sample:null,
   settings:{plans:allPlans(), cycle:4, target:TARGET_KCAL, checked:{}, train:[], workout:{}, preKcal:10, weighDay:0, profile:null, startWeek:null, trainBonus:150, pTarget:null, fTarget:null, goal:null, cal:{}, favs:[], adjAt:null},
-  body:{weights:[], measures:[]}, ob:null, legacy:false,
+  body:{weights:[], measures:[], checkups:[]}, ob:null, legacy:false,
   labs:{items:[]}, wlog:{ex:{}}, chat:{threads:[], cur:null}, chatView:'', chatBusyId:null,
   chatBusy:false, chatLive:'', chatDraft:'', chatImg:null, imgLimits:null, exImg:{}, dl:null, mcp:null, calBusy:false, calMsg:'', calOff:{}, restore:null, bkMsg:'', bkBusy:false, aiMsg:'', hlMsg:'', hlOk:false, showSteps:false, days:{}
 };

@@ -3,7 +3,7 @@ function render(){
   if(S.ob){ document.getElementById('app').innerHTML = viewOnboarding(); return; }
   S.planWeek = weekIdxOf(S.date);
   const page = PAGES.find(p=>p.id===S.page) || PAGES[0];
-  const body = {menu:viewMenu, cal:viewCal, spesa:viewSpesa, prep:viewPrep, allena:viewAllena, prog:viewProg, prof:viewProg, esami:viewEsami, assist:viewAssist, sett:viewSett, dati:viewDati}[page.id]();
+  const body = {menu:viewMenu, cal:viewCal, spesa:viewSpesa, prep:viewPrep, allena:viewAllena, prog:viewProg, prof:viewProg, esami:viewEsami, assist:viewAssist, sett:viewSett, dati:viewDati, check:viewCheck}[page.id]();
   const store = Store.mode==='cloud' ? 'Dati salvati nel tuo account' : 'Dati salvati solo su questo dispositivo';
   const scrollY = window.scrollY, home = page.id==='menu';
   const fab = (S.sample && page.id!=='assist') ? `<button class="fab" data-act="go" data-p="assist" aria-label="Apri l'assistente">${ICON.spark}</button>` : '';

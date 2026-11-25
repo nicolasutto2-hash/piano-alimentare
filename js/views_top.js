@@ -37,6 +37,7 @@ const PAGES = [
   {id:'prep', n:'Cosa preparare', sub:'Meal prep e conservazione', ic:'prep'},
   {id:'allena', n:'Allenamento', sub:'Giorni, scheda e carichi', ic:'allena'},
   {id:'prog', n:'Peso e misure', sub:'I tuoi progressi', ic:'scale'},
+  {id:'check', n:'Check-up corpo', sub:'Composizione, forza e mobilità', ic:'report'},
   {id:'esami', n:'Esami del sangue', sub:'I tuoi valori nel tempo', ic:'flask'},
   {id:'prof', n:'Il mio profilo', sub:'Dati personali e preferenze', ic:'user'},
   {id:'dati', n:'Promemoria e dati', sub:'Calendario ed esportazione', ic:'bell'},

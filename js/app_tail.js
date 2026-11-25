@@ -291,15 +291,24 @@ document.addEventListener('click', ev => {
   else if(a==='stepshide'){ S.showSteps=false; render(); }
   else if(a==='hlimport'){
     S.hlMsg=''; S.hlOk=false;
-    const done = txt => importHealth(txt).then(h=>{ S.hlMsg='Importato: '+shortDate(h.d)+(h.steps!=null?', '+fmt(h.steps)+' passi':'')+(h.active!=null?', '+fmt(h.active)+' kcal attive':'')+(h.exMin!=null?', '+fmt(h.exMin)+' min di esercizio':'')+'.'; S.hlOk=true; render(); })
+    const done = txt => (/PIANO-CHECKUP/i.test(txt) ? Promise.resolve(importCheckup(txt)) : importHealth(txt)).then(h=>{ if(h.kind==='checkup'){ S.hlMsg='Check-up importato ('+h.n+' valori). Lo trovi in Check-up corpo.'; S.hlOk=true; render(); return; } S.hlMsg='Importato: '+shortDate(h.d)+(h.steps!=null?', '+fmt(h.steps)+' passi':'')+(h.active!=null?', '+fmt(h.active)+' kcal attive':'')+(h.exMin!=null?', '+fmt(h.exMin)+' min di esercizio':'')+'.'; S.hlOk=true; render(); })
       .catch(e=>{ S.hlMsg=e.message; render(); });
     if(navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(done).catch(()=>{ S.hlMsg='Non riesco a leggere gli appunti. Usa "Incolla a mano" qui sotto.'; render(); });
     else { S.hlMsg='Il telefono non permette di leggere gli appunti. Usa "Incolla a mano".'; render(); }
   }
   else if(a==='hlpaste'){
     S.hlMsg=''; S.hlOk=false;
-    importHealth(val('hltext')).then(h=>{ S.hlMsg='Importato: '+shortDate(h.d)+'.'; S.hlOk=true; render(); }).catch(e=>{ S.hlMsg=e.message; render(); });
+    (/PIANO-CHECKUP/i.test(val('hltext')) ? Promise.resolve().then(()=>importCheckup(val('hltext'))) : importHealth(val('hltext'))).then(h=>{ S.hlMsg = h.kind==='checkup' ? 'Check-up importato ('+h.n+' valori). Lo trovi in Check-up corpo.' : 'Importato: '+shortDate(h.d)+'.'; S.hlOk=true; render(); }).catch(e=>{ S.hlMsg=e.message; render(); });
   }
+  else if(a==='cksave'){
+    const v = {}; let bad = '';
+    for(const [k,lab,,,max] of CK_FIELDS){ const el = $('ck-'+k); if(!el || !el.value.trim()) continue; const n = ckVal(el.value); if(n===null || n<0 || n>max){ bad = lab+': valore non valido'; break; } v[k] = n; }
+    if(bad) return toast(bad);
+    if(!Object.keys(v).length) return toast('Inserisci almeno un valore.');
+    saveCheckup(val('ck-date') || todayStr(), v); render(); toast('Check-up salvato');
+  }
+  else if(a==='ckpaste'){ try{ const r = importCheckup(val('cktext')); render(); toast('Check-up importato ('+r.n+' valori)'); }catch(e){ toast(e.message); } }
+  else if(a==='ckdel'){ S.body.checkups = (S.body.checkups||[]).filter(x=>x.id!==el.dataset.id); saveDoc('body'); render(); }
   else if(a==='resetchecks'){ const p=el.dataset.ws+':'; for(const k of Object.keys(S.settings.checked)) if(k.startsWith(p)) delete S.settings.checked[k]; saveSettings(); render(); }
   else if(a==='spesaweek'){ S.spesaWeek=+el.dataset.n; render(); }
   else if(a==='cycle'){ S.settings.cycle=+el.dataset.n; saveSettings(); render(); toast(S.settings.cycle===1?'Menù sempre uguale':'Rotazione su '+S.settings.cycle+' settimane'); }
@@ -451,7 +460,7 @@ async function loadAll(){
     S.legacy = !s.profile && !!(s.plans || s.plan);
     if(s.workout && typeof s.workout==='object') S.settings.workout = s.workout;
   }
-  if(b && Array.isArray(b.weights) && b.weights.length) S.body = {weights:b.weights, measures:Array.isArray(b.measures)?b.measures:[]};
+  if(b && Array.isArray(b.weights) && (b.weights.length || (Array.isArray(b.checkups)&&b.checkups.length))) S.body = {weights:b.weights, measures:Array.isArray(b.measures)?b.measures:[], checkups:Array.isArray(b.checkups)?b.checkups:[]};
   if(l && Array.isArray(l.items)) S.labs = l;
   if(w && w.ex) S.wlog = w;
   if(c && Array.isArray(c.threads)) S.chat = {threads:c.threads, cur:null};

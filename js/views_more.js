@@ -207,6 +207,7 @@ async function exportCSV(){
   for(const w of sortedW()) rows.push(['peso',w.d,'Peso',w.kg,'kg','']);
   for(const m of S.body.measures) for(const [k,n] of MEASURES) if(m[k]!=null) rows.push(['misura',m.d,n,m[k],'cm','']);
   for(const l of S.labs.items) rows.push(['esame',l.d,l.t,l.v,l.u||'',refText(l)]);
+  for(const c of sortedCk()) for(const [k,lab,u] of CK_FIELDS) if(c[k]!=null) rows.push(['checkup',c.d,lab,c[k],u,'']);
   for(const x of await loadRecentDays(28)) rows.push(['calorie',x.d,'Calorie del giorno',Math.round(x.k),'kcal','obiettivo '+x.tg+' · P '+Math.round(x.p)+' g · C '+Math.round(x.c)+' g · G '+Math.round(x.f)+' g · acqua '+x.water+' bicchieri']);
   if(S.settings.goal) rows.push(['obiettivo',S.settings.goal.date,'Peso obiettivo',S.settings.goal.kg,'kg','']);
   return rows.map(r=>r.map(csvCell).join(';')).join('\n');
@@ -222,6 +223,7 @@ async function exportHTML(){
 <h2>Profilo e obiettivo</h2><p>${(()=>{const p=S.settings.profile; return p?(p.sex==='F'?'Donna':'Uomo')+', '+p.age+' anni, '+p.height+' cm. Obiettivo: '+(GOALS[p.goal]||'').toLowerCase()+'. '+(p.trainDays||[]).length+' allenamenti a settimana ('+sportLabel()+'). ':''})()}Obiettivo calorico: ${fmt(S.settings.target)} kcal nei giorni normali (+${trainBonus()} nei giorni di allenamento).${g?' Peso obiettivo: '+f1(g.kg)+' kg entro il '+E(shortDate(g.date))+'.':''}</p>
 <h2>Peso</h2><p>${ws.length?`Partenza ${f1(ws[0].kg)} kg · ultimo ${f1(ws[ws.length-1].kg)} kg (${E(shortDate(ws[ws.length-1].d))}).`:'Nessuna pesata registrata.'}</p>
 ${tbl(['Settimana','Peso medio (kg)','Pesate'], [...wk].reverse().slice(0,16).map(w=>[shortDate(w.ws)+' – '+shortDate(shift(w.ws,6)), f1(w.kg), w.n]))}
+<h2>Check-up del corpo</h2>${sortedCk().length?tbl(['Data','Peso (kg)','Massa grassa (%)','Massa magra (kg)','Muscolo (kg)','Metabolismo (kcal)'], [...sortedCk()].reverse().map(c=>[shortDate(c.d)+' '+parse(c.d).getFullYear(), c.peso!=null?f1(c.peso):'–', c.grassoPct!=null?f1(c.grassoPct):'–', c.magraKg!=null?f1(c.magraKg):'–', c.muscoloKg!=null?f1(c.muscoloKg):'–', c.bmr!=null?fmt(c.bmr):'–'])):'<p class="m">Nessun check-up inserito.</p>'}
 <h2>Misure del corpo (cm)</h2>${tbl(['Data',...MEASURES.map(m=>m[1])], [...S.body.measures].sort((a,b)=>a.d<b.d?1:-1).map(m=>[shortDate(m.d)+' '+parse(m.d).getFullYear(), ...MEASURES.map(([k])=>m[k]!=null?f1(m[k]):'–')]))}
 <h2>Esami del sangue</h2>${Object.keys(labs).length ? Object.entries(labs).map(([n,rows])=>`<h3 style="margin:14px 0 4px;font-size:1rem">${E(n)}</h3>${tbl(['Data','Valore','Unità','Riferimento','Esito'], rows.slice().reverse().map(l=>[shortDate(l.d)+' '+parse(l.d).getFullYear(), f1(l.v), l.u||'', refText(l)||'–', labStatus(l)[0]]))}`).join('') : '<p class="m">Nessun esame inserito.</p>'}
 <p class="m">I valori di riferimento sono indicativi (maschio adulto): fa fede il referto del laboratorio.</p>

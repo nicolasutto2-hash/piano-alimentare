@@ -226,7 +226,7 @@ function finishProfile(){
   repairPlans();
   if(!old){
     S.settings.startWeek = S.settings.startWeek || shift(todayStr(), -dayIdx(todayStr()));
-    if(!legacy) S.body = {weights:[{d:todayStr(), kg:p.weight}], measures:[]};
+    if(!legacy) S.body = {weights:[{d:todayStr(), kg:p.weight}], measures:[], checkups:S.body.checkups||[]};
   }
   S.legacy = false; S.ob = null;
   saveSettings(); saveDoc('body'); render(); window.scrollTo(0,0);
