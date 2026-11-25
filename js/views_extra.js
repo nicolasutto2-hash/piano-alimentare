@@ -114,7 +114,8 @@ function viewAllena(){
     });
     if(exs.length && dn>=tot) h += `<section class="card" style="border:2px solid var(--accent)"><h3>Allenamento completato</h3><p class="small muted" style="margin:6px 0 0">Ottimo lavoro. Bevi, mangia il pasto post workout e fai un po' di stretching leggero.</p></section>`;
   }
-  const rest = S.rest ? `<div class="wk-rest" role="timer" aria-live="off"><div class="row between"><div><div class="small">Recupero</div><div class="num wk-time big rtime">${fmtClock(S.rest.end-Date.now())}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-act="restadd">+15 s</button><button class="btn sm pri" data-act="restskip">Salta</button></div></div><div class="wk-rbar"><i class="rbar" style="width:${restPct()}%"></i></div></div>` : '';
+  const ss = loadSess();
+  const rest = (S.rest||ss) ? `<div class="wk-spacer"></div><div class="wk-rest ${S.rest?'resting':''}" role="timer" aria-live="off"><div class="row between"><div><div class="small">Sessione</div><div class="num wk-time sesst">${ss?fmtClock(Date.now()-ss.start):'00:00'}</div></div>${S.rest?`<div style="text-align:right"><div class="small">Recupero</div><div class="num wk-time big rtime">${fmtClock(S.rest.end-Date.now())}</div></div>`:''}</div>${S.rest?`<div class="wk-rbar"><i class="rbar" style="width:${restPct()}%"></i></div><div class="row" style="gap:8px;margin-top:10px;justify-content:flex-end"><button class="btn sm" data-act="restadd">+15 s</button><button class="btn sm pri" data-act="restskip">Salta il recupero</button></div>`:''}</div>` : '';
   h += `<div style="margin:6px 0 10px"><button class="btn" data-act="mgmt" aria-expanded="${!!S.mgmt}">${S.mgmt?'Chiudi la gestione della scheda':'Gestisci la scheda'}</button></div>`;
   if(S.mgmt) h += viewAllenaMgmt();
   return h + rest;
@@ -131,9 +132,10 @@ function tickRest(){
 function tickClocks(){
   const a=document.getElementById('sesstime'), b=document.getElementById('swtime');
   if(a && S.sess) a.textContent = fmtClock(Date.now()-S.sess.start);
+  if(S.sess) document.querySelectorAll('.sesst').forEach(x=>x.textContent=fmtClock(Date.now()-S.sess.start));
   let pl = document.getElementById('sesspill'); const ss = loadSess();
   if(!pl){ pl = document.createElement('button'); pl.id='sesspill'; pl.className='sesspill num'; pl.setAttribute('data-act','go'); pl.setAttribute('data-p','allena'); pl.setAttribute('aria-label','Sessione in corso, apri Allenamento'); document.body.appendChild(pl); }
-  pl.hidden = !ss; if(ss){ pl.textContent = '● Sessione '+fmtClock(Date.now()-ss.start); pl.style.bottom = S.rest ? 'calc(130px + env(safe-area-inset-bottom,0px))' : 'calc(16px + env(safe-area-inset-bottom,0px))'; }
+  pl.hidden = !ss || S.page==='allena'; if(ss){ pl.textContent = '● Sessione '+fmtClock(Date.now()-ss.start); pl.style.bottom = S.rest ? 'calc(130px + env(safe-area-inset-bottom,0px))' : 'calc(16px + env(safe-area-inset-bottom,0px))'; }
   if(b) b.textContent = fmtClock(swMs());
 }
 setInterval(()=>{ tickRest(); tickClocks(); }, 500);
