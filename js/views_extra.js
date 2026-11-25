@@ -104,6 +104,7 @@ function viewAllena(){
         h += `<div class="small muted" style="margin:8px 0 0">${ls?'Ultima volta ('+shortDate(ls.d)+'): '+ls.sets.map(x=>x.kg+'×'+x.reps).join(' · '):'Prima volta: scegli un carico leggero.'}</div>
           ${pr?`<div class="small ${pr.up?'done':'muted'}">${pr.text}</div>`:''}
           ${e.note?`<div class="small muted" style="margin-top:4px">${esc(e.note)}</div>`:''}
+          ${S.rest&&!full?`<div class="wk-inrest"><span class="small">Recupero</span> <b class="num rtime">${fmtClock(S.rest.end-Date.now())}</b></div>`:''}
           ${full?'':`<div class="wk-in"><div class="stepper"><button data-act="wstep" data-t="wk${e.id}" data-d="-2.5" aria-label="Meno peso">−</button><input id="wk${e.id}" type="number" inputmode="decimal" step="0.5" min="0" value="${kg0}" aria-label="Peso in kg"><button data-act="wstep" data-t="wk${e.id}" data-d="2.5" aria-label="Più peso">+</button><span class="u">kg</span></div>
           <div class="stepper"><button data-act="wstep" data-t="wr${e.id}" data-d="-1" aria-label="Meno ripetizioni">−</button><input id="wr${e.id}" type="number" inputmode="numeric" min="1" value="${r0}" aria-label="Ripetizioni"><button data-act="wstep" data-t="wr${e.id}" data-d="1" aria-label="Più ripetizioni">+</button><span class="u">rip</span></div></div>
           <button class="btn pri wk-go" data-act="wset" data-id="${e.id}">Serie ${k+1} fatta</button>`}
@@ -113,16 +114,19 @@ function viewAllena(){
     });
     if(exs.length && dn>=tot) h += `<section class="card" style="border:2px solid var(--accent)"><h3>Allenamento completato</h3><p class="small muted" style="margin:6px 0 0">Ottimo lavoro. Bevi, mangia il pasto post workout e fai un po' di stretching leggero.</p></section>`;
   }
-  const rest = S.rest ? `<div class="wk-rest" role="timer"><div><div class="small">Recupero</div><div id="resttime" class="num wk-time">${Math.max(0,Math.ceil((S.rest.end-Date.now())/1000))}s</div></div><div class="row" style="gap:6px"><button class="btn sm" data-act="restadd">+15 s</button><button class="btn sm pri" data-act="restskip">Salta</button></div></div>` : '';
+  const rest = S.rest ? `<div class="wk-rest" role="timer" aria-live="off"><div class="row between"><div><div class="small">Recupero</div><div class="num wk-time big rtime">${fmtClock(S.rest.end-Date.now())}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-act="restadd">+15 s</button><button class="btn sm pri" data-act="restskip">Salta</button></div></div><div class="wk-rbar"><i class="rbar" style="width:${restPct()}%"></i></div></div>` : '';
   h += `<div style="margin:6px 0 10px"><button class="btn" data-act="mgmt" aria-expanded="${!!S.mgmt}">${S.mgmt?'Chiudi la gestione della scheda':'Gestisci la scheda'}</button></div>`;
   if(S.mgmt) h += viewAllenaMgmt();
   return h + rest;
 }
+const restPct = () => S.rest ? Math.max(0,Math.min(100,(S.rest.end-Date.now())/S.rest.total*100)) : 0;
 function tickRest(){
   if(!S.rest) return;
-  const left = Math.ceil((S.rest.end-Date.now())/1000), el = document.getElementById('resttime');
+  const left = Math.ceil((S.rest.end-Date.now())/1000);
   if(left<=0){ S.rest=null; try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){} if(S.page==='allena') render(); return; }
-  if(el) el.textContent = left+'s';
+  document.querySelectorAll('.rtime').forEach(x=>x.textContent=fmtClock(S.rest.end-Date.now()));
+  document.querySelectorAll('.rbar').forEach(x=>x.style.width=restPct()+'%');
+  document.querySelectorAll('.wk-rest').forEach(x=>x.classList.toggle('soon',left<=10));
 }
 function tickClocks(){
   const a=document.getElementById('sesstime'), b=document.getElementById('swtime');

@@ -201,3 +201,11 @@ input[type=date]{font:inherit;color:var(--fg);background:var(--surface2);border:
 .stepper input{font-size:1.15rem}
 .stepper .u{flex:none;padding-right:4px}
 .wk-rest .btn:not(.pri){background:transparent;color:var(--bg);border:1px solid color-mix(in srgb,var(--bg) 40%,transparent)}
+
+.wk-time.big{font-size:2.6rem;line-height:1.1}
+.wk-rbar{height:6px;border-radius:99px;background:color-mix(in srgb,var(--bg) 25%,transparent);margin-top:10px;overflow:hidden}
+.wk-rbar i{display:block;height:100%;background:var(--lime-strong);border-radius:99px}
+.wk-rest.soon .wk-time{color:var(--lime-strong)}
+.wk-inrest{margin-top:12px;padding:10px 14px;border-radius:14px;background:var(--accent-soft);color:var(--accent-ink);display:flex;justify-content:space-between;align-items:center}
+.wk-inrest b{font-size:1.6rem}
+.wk-rest{display:block}

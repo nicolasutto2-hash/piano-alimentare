@@ -361,11 +361,11 @@ document.addEventListener('click', ev => {
     const arr=(S.wlog.ex[id]=S.wlog.ex[id]||[]); arr.push({d:todayStr(),kg,reps}); if(arr.length>80) arr.splice(0,arr.length-80);
     const di=pickWDay(), ex=exOf(di).find(x=>x.id===id);
     if(ex && setsToday(id).length>=ex.sets){ const nx=exOf(di).find(x=>setsToday(x.id).length<x.sets); S.wOpen = nx?nx.id:'-'; S.rest=null; }
-    else if(ex) S.rest={end:Date.now()+restSecs(ex.rest)*1000};
+    else if(ex){ const sec=restSecs(ex.rest); S.rest={end:Date.now()+sec*1000,total:sec*1000}; }
     saveDoc('wlog'); render();
   }
   else if(a==='wundo'){ const id=el.dataset.id, arr=S.wlog.ex[id]||[]; for(let i=arr.length-1;i>=0;i--) if(arr[i].d===todayStr()){ arr.splice(i,1); break; } saveDoc('wlog'); render(); }
-  else if(a==='restadd'){ if(S.rest){ S.rest.end+=15000; tickRest(); } }
+  else if(a==='restadd'){ if(S.rest){ S.rest.end+=15000; S.rest.total+=15000; tickRest(); } }
   else if(a==='restskip'){ S.rest=null; render(); }
   else if(a==='mgmt'){ S.mgmt=!S.mgmt; render(); }
   else if(a==='wlogopen') openSheet('wlog',{exDi:+el.dataset.di, exId:el.dataset.id});
